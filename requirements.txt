@@ -1,0 +1,13 @@
+torch
+torchvision
+numpy
+pandas
+matplotlib
+tqdm
+h5py
+scikit-learn
+python-dotenv
+pillow
+tensorboard
+ipykernel
+notebook
