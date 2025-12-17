@@ -92,7 +92,6 @@ def get_dataloader(split_name, batch_size=4, num_workers=0, shuffle=True):
 
 
 if __name__ == "__main__":
-    # Test the loader
     loader = get_dataloader("train", batch_size=2)
     print("Testing DataLoader...")
 
