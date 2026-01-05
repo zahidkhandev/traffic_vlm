@@ -17,5 +17,6 @@ class ModelConfig:
 
     vocab_size: int = 500  # Small vocab for specific traffic commands
     max_seq_len: int = 32  # Max length of questions/answers
+    intermediate_size: int = 1024  # 4x hidden_dim (256 * 4)
 
     dropout: float = 0.1  # 10% dropout to prevent overfitting

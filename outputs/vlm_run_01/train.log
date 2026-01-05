@@ -1,0 +1,16 @@
+2026-01-05 16:51:40 [INFO] Dataset Config: {'root_dir': 'data\\raw', 'output_dir': 'data\\processed', 'images_dir_name': 'images', 'labels_dir_name': 'labels', 'image_size': 128, 'max_seq_len': 32, 'mean': [0.485, 0.456, 0.406], 'std': [0.229, 0.224, 0.225], 'allowed_weather': ['clear', 'partly cloudy', 'overcast', 'undefined'], 'allowed_time': ['daytime']}
+2026-01-05 16:51:40 [INFO] Experiment: vlm_run_01
+2026-01-05 16:51:40 [INFO] Device: cuda
+2026-01-05 16:51:41 [INFO] Loading Data...
+2026-01-05 16:51:41 [INFO] Vocab Size: 28
+2026-01-05 16:51:41 [INFO] Train Batches: 37411 | Val Batches: 5327
+2026-01-05 16:51:41 [INFO] Initializing Model...
+2026-01-05 17:55:04 [INFO] Dataset Config: {'root_dir': 'data\\raw', 'output_dir': 'data\\processed', 'images_dir_name': 'images', 'labels_dir_name': 'labels', 'image_size': 128, 'max_seq_len': 32, 'mean': [0.485, 0.456, 0.406], 'std': [0.229, 0.224, 0.225], 'allowed_weather': ['clear', 'partly cloudy', 'overcast', 'undefined'], 'allowed_time': ['daytime']}
+2026-01-05 17:55:04 [INFO] Experiment: vlm_run_01
+2026-01-05 17:55:04 [INFO] Device: cuda
+2026-01-05 17:55:05 [INFO] Loading Data...
+2026-01-05 17:55:05 [INFO] Vocab Size: 28
+2026-01-05 17:55:06 [INFO] Train Batches: 37411 | Val Batches: 5327
+2026-01-05 17:55:06 [INFO] Initializing Model...
+2026-01-05 17:55:06 [INFO] Trainable Parameters: 8.86M
+2026-01-05 17:55:08 [INFO] Starting Training...
