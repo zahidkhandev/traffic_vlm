@@ -7,7 +7,7 @@ import torch
 
 class CrossAttentionAnalyzer:
     """
-    Task 15: Cross-Attention Analysis & Visualization Tools.
+    Cross-Attention Analysis & Visualization Tools.
     Helper class to convert raw attention tensors into 2D heatmaps.
     """
 

@@ -10,7 +10,7 @@ from model.language.rope_embeddings import RotaryEmbedding
 
 class GemmaDecoder(nn.Module):
     """
-    Task 11: The Main Language Decoder.
+    The Main Language Decoder.
     Fixed Pylance type error for tuple concatenation.
     """
 

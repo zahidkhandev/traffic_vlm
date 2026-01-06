@@ -7,7 +7,7 @@ from torch.optim.lr_scheduler import LambdaLR
 
 def get_scheduler(optimizer, num_warmup_steps, num_training_steps, min_lr_ratio=0.0):
     """
-    Task 21: Learning Rate Scheduler (Cosine with Warmup).
+    Learning Rate Scheduler (Cosine with Warmup).
 
     Phases:
     1. Linear Warmup: LR goes from 0 to Base_LR

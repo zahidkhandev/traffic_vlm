@@ -1,0 +1,11 @@
+2026-01-06 15:54:26 [INFO] Dataset Config: {'root_dir': 'data\\raw', 'output_dir': 'data\\processed', 'images_dir_name': 'images', 'labels_dir_name': 'labels', 'image_size': 128, 'max_seq_len': 32, 'mean': [0.485, 0.456, 0.406], 'std': [0.229, 0.224, 0.225], 'allowed_weather': ['clear', 'partly cloudy', 'overcast', 'rainy', 'snowy', 'foggy', 'undefined'], 'allowed_time': ['daytime', 'night', 'dawn/dusk', 'undefined']}
+2026-01-06 15:54:26 [INFO] Experiment: test_run_1
+2026-01-06 15:54:26 [INFO] Device: cuda
+2026-01-06 15:54:27 [INFO] Loading Data...
+2026-01-06 15:54:27 [INFO] Vocab Size: 39
+2026-01-06 15:54:28 [INFO] Train Batches: 326479 | Val Batches: 46680
+2026-01-06 15:54:28 [INFO] Initializing Model...
+2026-01-06 15:54:29 [INFO] Trainable Parameters: 8.88M
+2026-01-06 15:54:30 [INFO] Starting Training...
+2026-01-06 15:56:35 [INFO] Training interrupted.
+2026-01-06 15:56:35 [INFO] Done.

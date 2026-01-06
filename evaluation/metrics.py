@@ -1,4 +1,3 @@
-# Task 22: Accuracy/Precision/Recall
 import numpy as np
 import torch
 from sklearn.metrics import (
@@ -13,7 +12,6 @@ from sklearn.metrics import (
 def compute_metrics(predictions, labels):
     """
     Comprehensive Evaluation Metrics.
-    Calculates Accuracy, Precision, Recall, F1, and Confusion Matrix.
     """
     if isinstance(predictions, torch.Tensor):
         predictions = predictions.cpu().numpy()
@@ -27,6 +25,7 @@ def compute_metrics(predictions, labels):
     f1 = f1_score(labels, predictions, zero_division=0)
 
     # Confusion Matrix (Flattened: TN, FP, FN, TP)
+    # Ensure labels=[0, 1] to handle cases where a batch might miss a class
     cm = confusion_matrix(labels, predictions, labels=[0, 1])
     tn, fp, fn, tp = cm.ravel()
 

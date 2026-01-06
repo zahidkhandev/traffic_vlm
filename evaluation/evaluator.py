@@ -1,5 +1,3 @@
-# Task 24: Inference Pipeline
-
 import torch
 from tqdm import tqdm
 
@@ -31,10 +29,10 @@ class Evaluator:
 
         with torch.no_grad():
             for batch in tqdm(self.dataloader, desc="Running Evaluation"):
-                # Move to device
-                pixel_values = batch["pixel_values"].to(self.device)
+                # FIX: Keys updated to match TrafficDataset ("image", "label")
+                pixel_values = batch["image"].to(self.device)
                 input_ids = batch["input_ids"].to(self.device)
-                labels = batch["labels"].to(self.device)
+                labels = batch["label"].to(self.device)
 
                 # Forward
                 outputs = self.model(pixel_values=pixel_values, input_ids=input_ids)

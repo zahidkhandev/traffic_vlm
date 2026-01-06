@@ -34,16 +34,14 @@ class CommandGenerator:
         return (self.image_width / 3) < center_x < (2 * self.image_width / 3)
 
     def _generate_detection(self, objects):
-        """Generates 'Is there a [obj]?' questions for all 10 classes."""
+        """Generates 'Is there a [obj]?' questions."""
         present_categories = set(obj["category"] for obj in objects)
         commands = []
 
         # 1. Positive Sample (It exists)
-        # We try to generate up to 2 positive questions to cover more objects
         if present_categories:
             valid_present = [c for c in present_categories if c in self.valid_objects]
             if valid_present:
-                # Pick up to 2 distinct objects if available
                 targets = random.sample(valid_present, min(len(valid_present), 2))
                 for target in targets:
                     commands.append(
@@ -62,10 +60,32 @@ class CommandGenerator:
 
         return commands
 
+    def _generate_context(self, attributes):
+        """
+        Generates questions about Weather and Time of Day.
+        """
+        commands = []
+        weather = attributes.get("weather", "undefined")
+        time_of_day = attributes.get("timeofday", "undefined")
+
+        # --- Weather Questions ---
+        if weather != "undefined":
+            commands.append({"q": f"Is it {weather}?", "a": "yes", "type": "weather"})
+            # Simple contrast: if rainy -> clear? if clear -> rainy?
+            contrast = "rainy" if weather == "clear" else "clear"
+            commands.append({"q": f"Is it {contrast}?", "a": "no", "type": "weather"})
+
+        # --- Time Questions ---
+        if time_of_day != "undefined":
+            commands.append({"q": f"Is it {time_of_day}?", "a": "yes", "type": "time"})
+            contrast = "night" if time_of_day == "daytime" else "daytime"
+            commands.append({"q": f"Is it {contrast}?", "a": "no", "type": "time"})
+
+        return commands
+
     def _generate_safety(self, objects):
         """
         Determines safety based on Critical Objects in the Center Lane.
-        Unsafe if: Red Light OR Pedestrian OR Rider is directly ahead.
         """
         safe = True
 
@@ -77,19 +97,16 @@ class CommandGenerator:
                     safe = False
                     break
 
-            # Rule 2: Vulnerable Road Users in Center (Pedestrian OR Rider)
+            # Rule 2: Vulnerable Road Users in Center
             if obj["category"] in ["pedestrian", "rider"] and self._is_center(
                 obj["box2d"]
             ):
                 safe = False
                 break
 
-        commands = []
-        commands.append(
+        return [
             {"q": "Can I move forward?", "a": "yes" if safe else "no", "type": "safety"}
-        )
-
-        return commands
+        ]
 
     def _generate_color(self, objects):
         """Generates questions about traffic light colors."""
@@ -98,13 +115,10 @@ class CommandGenerator:
 
         for light in lights:
             color = light.get("attributes", {}).get("trafficLightColor", "none")
-            # Only ask if the color is actually defined
             if color in ["red", "green", "yellow"]:
                 commands.append(
                     {"q": f"Is the traffic light {color}?", "a": "yes", "type": "state"}
                 )
-
-                # Generate a negative pair
                 fake_color = "red" if color == "green" else "green"
                 commands.append(
                     {
@@ -113,9 +127,48 @@ class CommandGenerator:
                         "type": "state",
                     }
                 )
-                break
-
+                break  # Only ask about one light per image
         return commands
+
+    def _balance_safety_data(self, commands):
+        """
+        Balances Safety data by UPSAMPLING (Duplicating) the minority class.
+        This ensures the model sees equal Yes/No examples without losing data.
+        """
+        # Separate safety questions from the rest
+        safety_yes = [c for c in commands if c["type"] == "safety" and c["a"] == "yes"]
+        safety_no = [c for c in commands if c["type"] == "safety" and c["a"] == "no"]
+        others = [c for c in commands if c["type"] != "safety"]
+
+        if not safety_yes or not safety_no:
+            print("Warning: Could not balance safety data (one class is empty).")
+            return commands
+
+        # Target is the MAJORITY count (we want to match the bigger one)
+        target_count = max(len(safety_yes), len(safety_no))
+
+        print(f"   Original Safety: Yes={len(safety_yes)}, No={len(safety_no)}")
+        print(f"   Upsampling to match: {target_count}")
+
+        # Upsample the minority 'Yes'
+        if len(safety_yes) < target_count:
+            factor = target_count // len(safety_yes)
+            remainder = target_count % len(safety_yes)
+            safety_yes = (safety_yes * factor) + safety_yes[:remainder]
+
+        # Upsample the minority 'No'
+        if len(safety_no) < target_count:
+            factor = target_count // len(safety_no)
+            remainder = target_count % len(safety_no)
+            safety_no = (safety_no * factor) + safety_no[:remainder]
+
+        print(f"   Final Safety: Yes={len(safety_yes)}, No={len(safety_no)}")
+
+        # Combine everything back
+        final_commands = others + safety_yes + safety_no
+        random.shuffle(final_commands)  # Shuffle so training isn't clustered
+
+        return final_commands
 
     def generate_commands_for_split(self, split_name):
         h5_path = os.path.join(self.cfg.output_dir, f"{split_name}.h5")
@@ -124,42 +177,47 @@ class CommandGenerator:
             return
 
         print(f"Generating commands for {split_name}...")
-
-        dataset_commands = []
+        raw_commands = []
 
         with h5py.File(h5_path, "r") as hf:
-            # Explicitly access the dataset
             meta_ds = hf["metadata"]
 
             if isinstance(meta_ds, h5py.Dataset):
-                num_samples = len(meta_ds)
-
-                for idx in tqdm(range(num_samples)):
+                # Iterate through every image in the H5 file
+                for idx in tqdm(range(len(meta_ds))):
                     meta_str = meta_ds[idx].decode("utf-8")
                     meta = json.loads(meta_str)
 
-                    # Handle BDD100K 'frames' structure
+                    # Safely extract objects and attributes
                     if "frames" in meta and len(meta["frames"]) > 0:
                         objects = meta["frames"][0]["objects"]
                     else:
                         objects = []
 
+                    attributes = meta.get("attributes", {})
+
+                    # Generate all question types
                     image_cmds = []
                     image_cmds.extend(self._generate_detection(objects))
                     image_cmds.extend(self._generate_safety(objects))
                     image_cmds.extend(self._generate_color(objects))
+                    image_cmds.extend(self._generate_context(attributes))
 
+                    # Tag them with the image index
                     for cmd in image_cmds:
                         cmd["image_idx"] = idx
-                        dataset_commands.append(cmd)
+                        raw_commands.append(cmd)
             else:
                 print("Error: 'metadata' is not a valid Dataset.")
 
+        # --- APPLY UPSAMPLING HERE ---
+        final_commands = self._balance_safety_data(raw_commands)
+
         out_path = os.path.join(self.cfg.output_dir, f"{split_name}_commands.json")
         with open(out_path, "w") as f:
-            json.dump(dataset_commands, f, indent=2)
+            json.dump(final_commands, f, indent=2)
 
-        print(f"Saved {len(dataset_commands)} commands to {out_path}")
+        print(f"Saved {len(final_commands)} commands to {out_path}")
 
 
 if __name__ == "__main__":

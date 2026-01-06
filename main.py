@@ -6,13 +6,9 @@ import numpy as np
 import torch
 
 from config.dataset_config import DatasetConfig
-
-# --- Custom Modules ---
 from config.model_config import ModelConfig
 from config.training_config import TrainingConfig
 from data.data_loader import get_dataloader
-
-# Use your existing classes
 from data.tokenizer import SimpleTokenizer
 from evaluation.visualization import plot_training_curves
 from model.vlm_model import TrafficVLM
@@ -21,10 +17,14 @@ from training.scheduler import get_scheduler
 from training.trainer import Trainer
 from utils.checkpoint_manager import CheckpointManager
 from utils.logging_utils import setup_logger
+from visualization.cross_attention_viz import overlay_attention_heatmap
+from visualization.failure_analysis import FailureAnalyzer
 
 
 def set_seed(seed):
-    """Ensure reproducibility."""
+    """
+    Sets the random seed for reproducibility across Python, NumPy, and PyTorch.
+    """
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -35,6 +35,9 @@ def set_seed(seed):
 
 
 def parse_args():
+    """
+    Parses command-line arguments for experiment configuration.
+    """
     parser = argparse.ArgumentParser(description="Traffic VLM Training Pipeline")
     parser.add_argument(
         "--experiment_name", type=str, default="vlm_run_01", help="Name for logging"
@@ -46,43 +49,82 @@ def parse_args():
     return parser.parse_args()
 
 
+def visualize_epoch(model, val_loader, tokenizer, device, epoch, output_dir):
+    """
+    Generates attention heatmaps and failure analysis grids for the current epoch.
+    Saves images to outputs/experiment/visualizations/epoch_N/.
+    """
+    viz_dir = output_dir / "visualizations" / f"epoch_{epoch + 1}"
+    viz_dir.mkdir(parents=True, exist_ok=True)
+
+    model.eval()
+
+    try:
+        batch = next(iter(val_loader))
+        pixel_values = batch["image"].to(device)
+        input_ids = batch["input_ids"].to(device)
+
+        num_samples = min(4, pixel_values.size(0))
+
+        if hasattr(model, "get_cross_attention_map"):
+            attn_maps = model.get_cross_attention_map(pixel_values, input_ids)
+
+            if attn_maps is not None:
+                for i in range(num_samples):
+                    heatmap = attn_maps[i, -1, :, :]
+                    save_path = viz_dir / f"attention_sample_{i}.png"
+                    overlay_attention_heatmap(
+                        pixel_values[i],
+                        heatmap,
+                        title=f"Epoch {epoch + 1} Sample {i}",
+                        save_path=str(save_path),
+                    )
+    except Exception as e:
+        print(f"⚠️ Visualization Warning: Could not generate heatmaps. {e}")
+
+    try:
+        analyzer = FailureAnalyzer(model, val_loader, device, tokenizer)
+        failures = analyzer.find_failures(num_samples=9)
+
+        if failures:
+            save_path = viz_dir / "failures.png"
+            analyzer.visualize_failures(failures, save_path=str(save_path))
+    except Exception as e:
+        print(f"⚠️ Visualization Warning: Could not run failure analysis. {e}")
+
+
 def main():
-    # 1. Setup
+    """
+    Main execution entry point. Handles configuration, data loading, model initialization,
+    training loop, validation, and artifact saving.
+    """
     args = parse_args()
 
-    # Load configs
     m_config = ModelConfig()
     t_config = TrainingConfig()
     d_config = DatasetConfig()
 
-    # Override config with args
     t_config.batch_size = args.batch_size
     t_config.num_epochs = args.epochs
 
-    # Paths
     output_dir = Path(t_config.output_dir) / args.experiment_name
     output_dir.mkdir(parents=True, exist_ok=True)
     checkpoint_dir = Path(t_config.checkpoint_dir) / args.experiment_name
 
-    # FIX: Initialize Logger BEFORE using it
     logger = setup_logger("TrafficVLM", save_dir=output_dir)
 
-    # Now it is safe to log
     logger.info(f"Dataset Config: {d_config.__dict__}")
     logger.info(f"Experiment: {args.experiment_name}")
     logger.info(f"Device: {t_config.device}")
 
     set_seed(42)
 
-    # 2. Data Pipeline
     logger.info("Loading Data...")
 
-    # Tokenizer is loaded internally by TrafficDataset, but we load here to check vocab size if needed
     tokenizer = SimpleTokenizer()
     tokenizer.load_vocab()
     logger.info(f"Vocab Size: {len(tokenizer.vocab)}")
 
-    # Use your existing get_dataloader function
     train_loader = get_dataloader(
         "train",
         batch_size=t_config.batch_size,
@@ -99,7 +141,6 @@ def main():
 
     logger.info(f"Train Batches: {len(train_loader)} | Val Batches: {len(val_loader)}")
 
-    # 3. Model
     logger.info("Initializing Model...")
     model = TrafficVLM(m_config)
     model.to(t_config.device)
@@ -107,7 +148,6 @@ def main():
     param_count = sum(p.numel() for p in model.parameters() if p.requires_grad)
     logger.info(f"Trainable Parameters: {param_count / 1e6:.2f}M")
 
-    # 4. Optimizer & Scheduler
     optimizer = get_optimizer(
         model, learning_rate=t_config.learning_rate, weight_decay=t_config.weight_decay
     )
@@ -119,7 +159,6 @@ def main():
         optimizer, num_warmup_steps=t_config.warmup_steps, num_training_steps=total_steps
     )
 
-    # 5. Checkpoint Manager
     ckpt_manager = CheckpointManager(checkpoint_dir=checkpoint_dir)
 
     start_epoch = 0
@@ -127,7 +166,6 @@ def main():
         start_epoch, _ = ckpt_manager.load(args.checkpoint, model, optimizer, scheduler)
         logger.info(f"Resumed from epoch {start_epoch}")
 
-    # 6. Initialize Trainer
     trainer = Trainer(
         model=model,
         train_loader=train_loader,
@@ -138,7 +176,6 @@ def main():
         device=t_config.device,
     )
 
-    # 7. Execution
     if args.eval_only:
         logger.info("Evaluation Only...")
         val_loss, val_acc = trainer.validate(epoch_index=0)
@@ -150,23 +187,17 @@ def main():
 
     try:
         for epoch in range(start_epoch, t_config.num_epochs):
-            # Train
             train_loss = trainer.train_one_epoch(epoch)
-
-            # Validate
             val_loss, val_acc = trainer.validate(epoch)
 
-            # Log
             logger.info(
                 f"Epoch {epoch + 1}/{t_config.num_epochs} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.2%}"
             )
 
-            # Store history
             history["train_loss"].append(train_loss)
             history["val_loss"].append(val_loss)
             history["val_acc"].append(val_acc)
 
-            # Save
             is_best = val_loss < ckpt_manager.best_metric
             if is_best:
                 ckpt_manager.best_metric = val_loss
@@ -180,12 +211,19 @@ def main():
                 is_best=is_best,
             )
 
+            plot_training_curves(history, save_dir=output_dir)
+            visualize_epoch(
+                model, val_loader, tokenizer, t_config.device, epoch, output_dir
+            )
+            logger.info(
+                f"Visualizations saved to {output_dir}/visualizations/epoch_{epoch + 1}"
+            )
+
     except KeyboardInterrupt:
         logger.info("Training interrupted.")
 
     logger.info("Done.")
 
-    # Save curves
     plot_training_curves(history, save_dir=output_dir)
 
 

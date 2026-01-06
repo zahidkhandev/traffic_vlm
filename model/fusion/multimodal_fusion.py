@@ -7,7 +7,7 @@ from config.model_config import ModelConfig
 
 class MultimodalClassifier(nn.Module):
     """
-    Task 16: Multimodal Classification Head.
+    Multimodal Classification Head.
 
     Takes the final hidden state from the Language Decoder
     and predicts the traffic command response (YES/NO).

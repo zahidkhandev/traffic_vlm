@@ -41,7 +41,6 @@ class TrafficDataset(Dataset):
     def __getitem__(self, idx):
         if self.h5_file is None:
             self.h5_file = h5py.File(self.h5_path, "r")
-            # We explicitly retrieve the dataset
             dataset = self.h5_file["images"]
             if isinstance(dataset, h5py.Dataset):
                 self.images = dataset
@@ -51,7 +50,6 @@ class TrafficDataset(Dataset):
         cmd = self.commands[idx]
         image_idx = cmd["image_idx"]
 
-        # Pylance now knows self.images is a Dataset because of the check above
         if self.images is not None:
             image = self.images[image_idx]
         else:
@@ -66,9 +64,8 @@ class TrafficDataset(Dataset):
         q_text = cmd["q"]
         input_ids = self.tokenizer.encode(q_text, max_len=self.cfg.max_seq_len)
 
-        a_text = cmd["a"]
-        answer_ids = self.tokenizer.encode(a_text)
-        label_id = answer_ids[1]
+        a_text = cmd["a"].lower().strip()
+        label_id = 1 if a_text == "yes" else 0
 
         return {
             "image": image,
