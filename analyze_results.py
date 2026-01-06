@@ -17,7 +17,7 @@ def analyze_model(checkpoint_path, output_dir="outputs/analysis"):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     os.makedirs(output_dir, exist_ok=True)
 
-    print(f"🔍 Loading model from {checkpoint_path}...")
+    print(f"Loading model from {checkpoint_path}...")
 
     # 1. Load Model & Data
     config = ModelConfig()
@@ -34,7 +34,7 @@ def analyze_model(checkpoint_path, output_dir="outputs/analysis"):
     tokenizer = SimpleTokenizer()
     tokenizer.load_vocab()
 
-    print("📊 Generating Visualizations...")
+    print("Generating Visualizations...")
 
     # --- PART A: Visualize Attention (The "Thinking" Process) ---
     # Get one batch
@@ -55,14 +55,12 @@ def analyze_model(checkpoint_path, output_dir="outputs/analysis"):
         overlay_attention_heatmap(
             pixel_values[0], last_token_map, title="Model Focus", save_path=save_path
         )
-        print(f"✅ Attention heatmap saved to {save_path}")
+        print(f"Attention heatmap saved to {save_path}")
     else:
-        print(
-            "⚠️ Model did not return attention maps (check get_cross_attention_map logic)"
-        )
+        print("Model did not return attention maps (check get_cross_attention_map logic)")
 
     # --- PART B: Failure Analysis (Where did it go wrong?) ---
-    print("🕵️ Running Failure Analysis (this takes a moment)...")
+    print("Running Failure Analysis (this takes a moment)...")
     analyzer = FailureAnalyzer(model, val_loader, device, tokenizer)
 
     # Find 4 mistakes
@@ -71,9 +69,9 @@ def analyze_model(checkpoint_path, output_dir="outputs/analysis"):
     if failures:
         save_path = os.path.join(output_dir, "failures.png")
         analyzer.visualize_failures(failures, save_path=save_path)
-        print(f"✅ Failure grid saved to {save_path}")
+        print(f"Failure grid saved to {save_path}")
     else:
-        print("🎉 No failures found in the first few batches! Model is doing great.")
+        print("No failures found in the first few batches! Model is doing great.")
 
 
 if __name__ == "__main__":
@@ -81,7 +79,7 @@ if __name__ == "__main__":
     # Example: checkpoints/vlm_run_01/checkpoint_epoch_0.pt
     # Since you are still training, you can verify with epoch 0 once it saves
 
-    CHECKPOINT = "checkpoints/vlm_run_01/checkpoint_epoch_0.pt"
+    CHECKPOINT = "checkpoints/traffic_vlm_v2/best_model.pt"
 
     if os.path.exists(CHECKPOINT):
         analyze_model(CHECKPOINT)
