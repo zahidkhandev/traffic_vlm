@@ -11,7 +11,6 @@ from model.language.rope_embeddings import RotaryEmbedding
 class GemmaDecoder(nn.Module):
     """
     The Main Language Decoder.
-    Fixed Pylance type error for tuple concatenation.
     """
 
     def __init__(self, config: ModelConfig):

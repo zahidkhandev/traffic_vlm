@@ -20,3 +20,5 @@ class ModelConfig:
     intermediate_size: int = 1024  # 4x hidden_dim (256 * 4)
 
     dropout: float = 0.1  # 10% dropout to prevent overfitting
+
+    num_classes: int = 6

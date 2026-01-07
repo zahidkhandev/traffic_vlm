@@ -10,14 +10,14 @@ class MultimodalClassifier(nn.Module):
     Multimodal Classification Head.
 
     Takes the final hidden state from the Language Decoder
-    and predicts the traffic command response (YES/NO).
+    and predicts the traffic command response (Safe, Red Light, Pedestrian, etc.).
     """
 
     def __init__(self, config: ModelConfig):
         super().__init__()
 
         self.hidden_dim = config.hidden_dim
-        self.num_classes = 2  # YES / NO
+        self.num_classes = config.num_classes
 
         self.classifier = nn.Sequential(
             nn.Linear(self.hidden_dim, self.hidden_dim),
@@ -32,7 +32,7 @@ class MultimodalClassifier(nn.Module):
         Args:
             hidden_states: [Batch, Seq_Len, Hidden_Dim]
         Returns:
-            logits: [Batch, 2]
+            logits: [Batch, Num_Classes]
         """
         # Shape: [Batch, Hidden_Dim]
         last_token_state = hidden_states[:, -1, :]

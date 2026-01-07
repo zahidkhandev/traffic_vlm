@@ -1,5 +1,6 @@
 import json
 import os
+from typing import Any  # <--- Added this
 
 import h5py
 import numpy as np
@@ -33,39 +34,45 @@ class TrafficDataset(Dataset):
             raise FileNotFoundError(f"Images file not found: {self.h5_path}")
 
         self.h5_file = None
-        self.images = None
+        self.images: Any = None
 
     def __len__(self):
         return len(self.commands)
 
     def __getitem__(self, idx):
+        # Open H5 file once per worker
         if self.h5_file is None:
             self.h5_file = h5py.File(self.h5_path, "r")
-            dataset = self.h5_file["images"]
-            if isinstance(dataset, h5py.Dataset):
-                self.images = dataset
-            else:
-                raise TypeError("H5 'images' key is not a Dataset.")
+            self.images = self.h5_file["images"]
+
+        # Explicit check prevents runtime errors, 'Any' prevents linter errors
+        if self.images is None:
+            raise RuntimeError("H5 images dataset failed to load.")
 
         cmd = self.commands[idx]
         image_idx = cmd["image_idx"]
 
-        if self.images is not None:
-            image = self.images[image_idx]
-        else:
-            raise RuntimeError("Images dataset not loaded.")
-
+        # Load Image
+        # Pylance will now accept this line because self.images is Any
+        image = self.images[image_idx]
         image = torch.tensor(image).permute(2, 0, 1).float() / 255.0
 
+        # Normalize
         mean = torch.tensor(self.cfg.mean).view(3, 1, 1)
         std = torch.tensor(self.cfg.std).view(3, 1, 1)
         image = (image - mean) / std
 
+        # Load Text
         q_text = cmd["q"]
         input_ids = self.tokenizer.encode(q_text, max_len=self.cfg.max_seq_len)
 
+        # Load Label using MAP
         a_text = cmd["a"].lower().strip()
-        label_id = 1 if a_text == "yes" else 0
+
+        if a_text in self.cfg.label_map:
+            label_id = self.cfg.label_map[a_text]
+        else:
+            label_id = 1  # Fallback to No/Unsafe
 
         return {
             "image": image,
@@ -75,9 +82,6 @@ class TrafficDataset(Dataset):
 
 
 def get_dataloader(split_name, batch_size=4, num_workers=0, shuffle=True):
-    """
-    Creates a DataLoader for the requested split.
-    """
     dataset = TrafficDataset(split_name)
     return DataLoader(
         dataset,
@@ -91,9 +95,6 @@ def get_dataloader(split_name, batch_size=4, num_workers=0, shuffle=True):
 if __name__ == "__main__":
     loader = get_dataloader("train", batch_size=2)
     print("Testing DataLoader...")
-
     for batch in loader:
-        print(f"Image Batch: {batch['image'].shape}")
-        print(f"Text Batch: {batch['input_ids'].shape}")
         print(f"Labels: {batch['label']}")
         break

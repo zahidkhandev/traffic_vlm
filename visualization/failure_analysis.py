@@ -1,7 +1,9 @@
 # Task 27: Error Analysis
 import matplotlib.pyplot as plt
+import numpy as np
 import torch
 
+from config.dataset_config import DatasetConfig
 from utils.tensor_utils import denormalize_image
 
 
@@ -11,6 +13,10 @@ class FailureAnalyzer:
         self.dataloader = dataloader
         self.device = device
         self.tokenizer = tokenizer
+        # Dynamically load the labels from config
+        self.cfg = DatasetConfig()
+        # Invert the label map: {0: "yes", 2: "stop_red_light", ...}
+        self.label_map = {v: k for k, v in self.cfg.label_map.items()}
 
     def find_failures(self, num_samples=5):
         self.model.eval()
@@ -21,7 +27,6 @@ class FailureAnalyzer:
                 if len(failures) >= num_samples:
                     break
 
-                # Match TrafficDataset keys: 'image', 'input_ids', 'label'
                 pixel_values = batch["image"].to(self.device)
                 input_ids = batch["input_ids"].to(self.device)
                 labels = batch["label"].to(self.device)
@@ -29,10 +34,8 @@ class FailureAnalyzer:
                 outputs = self.model(pixel_values, input_ids)
                 logits = outputs["logits"]
                 probs = torch.softmax(logits, dim=-1)
-
                 preds = torch.argmax(logits, dim=-1)
 
-                # Find incorrect indices
                 incorrect_mask = preds != labels
                 incorrect_indices = torch.where(incorrect_mask)[0]
 
@@ -58,21 +61,29 @@ class FailureAnalyzer:
             print("No failures found!")
             return
 
-        cols = min(5, n)
+        cols = min(3, n)  # Reduced columns for better readability of long labels
         rows = (n + cols - 1) // cols
 
-        plt.figure(figsize=(4 * cols, 4 * rows))
+        plt.figure(figsize=(5 * cols, 5 * rows))
 
         for i, fail in enumerate(failures):
             plt.subplot(rows, cols, i + 1)
 
+            # Denormalize and CLIP to [0, 1] to remove the imshow warnings
             img = denormalize_image(fail["image"])
+            img = np.clip(img, 0, 1)
+
             plt.imshow(img)
 
-            label_map = {0: "NO", 1: "YES"}
-            title = f"True: {label_map[fail['true_label']]} | Pred: {label_map[fail['pred_label']]}\nConf: {fail['confidence']:.2f}"
+            # Use the dynamic label map to prevent KeyError
+            true_name = self.label_map.get(fail["true_label"], "unknown")
+            pred_name = self.label_map.get(fail["pred_label"], "unknown")
 
-            plt.title(title, color="red", fontsize=10)
+            title = (
+                f"True: {true_name}\nPred: {pred_name}\nConf: {fail['confidence']:.2f}"
+            )
+
+            plt.title(title, color="red", fontsize=9)
             plt.axis("off")
 
         plt.tight_layout()

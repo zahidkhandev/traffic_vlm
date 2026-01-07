@@ -18,8 +18,8 @@ class VLMLoss(nn.Module):
     def forward(self, logits: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         """
         Args:
-            logits: [Batch, 2] (Raw scores for NO/YES)
-            labels: [Batch] (0 or 1)
+            logits: [Batch, Num_Classes] (Raw scores for generic classes)
+            labels: [Batch] (0 to Num_Classes-1)
         """
         return self.classification_loss(logits, labels)
 
