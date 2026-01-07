@@ -9,233 +9,192 @@ from config.dataset_config import DatasetConfig
 
 
 class CommandGenerator:
+    """
+    Generates linguistically diverse and spatially accurate VLM commands.
+    Implements priority-based safety logic: Red Light > Pedestrian > Vehicle.
+    """
+
     def __init__(self):
         self.cfg = DatasetConfig()
         self.image_width = 1280
         self.image_height = 720
 
-        self.valid_objects = [
-            "car",
-            "bus",
-            "truck",
-            "train",
-            "motor",
-            "bike",
-            "pedestrian",
-            "rider",
-            "traffic light",
-            "traffic sign",
-            "drivable area",
-            "lane marking",
-        ]
+        # PRODUCTION SPATIAL BOTTLENECK
+        # We only care about objects in the 'ego-lane' (approx 30% center width)
+        self.ego_left = self.image_width * 0.35
+        self.ego_right = self.image_width * 0.65
 
-        self.context_attributes = ["weather", "timeofday", "scene", "illumination"]
+        # HORIZON THRESHOLD
+        # Objects above 45% of the image height are too far to require stopping.
+        self.horizon_y = self.image_height * 0.45
 
-    def _is_center(self, box):
-        """Checks if object is in the horizontal center 50% of image."""
-        x1, x2 = box["x1"], box["x2"]
-        center_x = (x1 + x2) / 2
-        return (self.image_width * 0.25) < center_x < (self.image_width * 0.75)
-
-    def _is_close(self, box, category):
-        """
-        DETERMINES DEPTH BASED ON SIZE.
-        If an object is too small, it is far away -> SAFE.
-        If an object is big, it is close -> STOP.
-        """
-        y1, y2 = box["y1"], box["y2"]
-        box_h = y2 - y1
+    def _is_relevant(self, box, category):
+        """Determines if an object is physically in the path and close enough to matter."""
+        center_x = (box["x1"] + box["x2"]) / 2
+        bottom_y = box["y2"]
+        box_h = box["y2"] - box["y1"]
         height_ratio = box_h / self.image_height
 
-        # Different thresholds for different objects
-        if category in ["traffic light"]:
-            # Traffic lights are small, so even 5% height means it's close/relevant
-            return height_ratio > 0.05
-        elif category in ["pedestrian", "rider"]:
-            # Humans are smaller than trucks. If a human is 8% of screen, they are close.
-            return height_ratio > 0.08
-        else:
-            # Cars/Trucks/Buses.
-            # If a car is < 10% of the screen height, it is FAR AWAY.
-            # We can safely drive forward.
-            return height_ratio > 0.10
+        # 1. Horizontal path check (Ego-lane)
+        in_path = self.ego_left < center_x < self.ego_right
 
-    def _generate_detection(self, objects):
-        present_categories = set(obj["category"] for obj in objects)
-        commands = []
-        if present_categories:
-            valid_present = [c for c in present_categories if c in self.valid_objects]
-            if valid_present:
-                targets = random.sample(valid_present, min(len(valid_present), 2))
-                for target in targets:
-                    commands.append(
-                        {"q": f"Is there a {target}?", "a": "yes", "type": "detection"}
-                    )
+        # 2. Distance check (Horizon & Height)
+        # Objects at the horizon or extremely small are ignored for safety labels
+        is_close = bottom_y > self.horizon_y and height_ratio > 0.04
 
-        missing_categories = [
-            c for c in self.valid_objects if c not in present_categories
-        ]
-        if missing_categories:
-            target = random.choice(missing_categories)
-            commands.append(
-                {"q": f"Is there a {target}?", "a": "no", "type": "detection"}
+        # Traffic lights have a wider relevance zone but strict vertical height requirement
+        if category == "traffic light":
+            # Traffic lights can be slightly off-center (above the lane)
+            light_relevant = (
+                (self.image_width * 0.25) < center_x < (self.image_width * 0.75)
             )
-        return commands
+            return light_relevant and height_ratio > 0.02
 
-    def _generate_context(self, attributes):
-        commands = []
-        for attr in self.context_attributes:
-            val = attributes.get(attr, "undefined")
-            if val != "undefined":
-                commands.append(
-                    {"q": f"Is the {attr} {val}?", "a": "yes", "type": "context"}
-                )
-                if attr == "weather":
-                    contrast = "rainy" if val == "clear" else "clear"
-                    commands.append(
-                        {"q": f"Is the {attr} {contrast}?", "a": "no", "type": "context"}
-                    )
-        return commands
+        return in_path and is_close
 
     def _generate_safety(self, objects):
-        """
-        Generates 'safe' OR specific reasons based on CENTER + CLOSE logic.
-        """
-        reason = "safe"
+        """Prioritizes stop reasons to prevent 'noisy' overlapping labels."""
+        reasons = []
 
         for obj in objects:
-            # --- FIX: Skip objects that don't have bounding boxes (like lanes) ---
             if "box2d" not in obj:
                 continue
-            # -------------------------------------------------------------------
-
             cat = obj["category"]
+            attr = obj.get("attributes", {})
 
-            # 1. Check Center
-            if not self._is_center(obj["box2d"]):
-                continue  # Object is on the side, safe to pass.
+            # Filter out occluded or irrelevant objects
+            if attr.get("occluded") is True and cat != "traffic light":
+                continue
+            if not self._is_relevant(obj["box2d"], cat):
+                continue
 
-            # 2. Check Distance (Depth Proxy)
-            if not self._is_close(obj["box2d"], cat):
-                continue  # Object is center but FAR AWAY. Safe to continue.
-
-            # If we are here, object is Center AND Close. Danger!
-
-            # Priority 1: Red Light
+            # Logic check by priority
             if cat == "traffic light":
-                color = obj.get("attributes", {}).get("trafficLightColor", "none")
-                if color == "red":
-                    reason = "stop_red_light"
-                    break
-
-            # Priority 2: Humans
-            elif cat in ["pedestrian", "rider"]:
-                reason = "stop_pedestrian"
-                break
-
-            # Priority 3: Vehicles
+                if attr.get("trafficLightColor") == "red":
+                    reasons.append("stop_red_light")
+            elif cat in ["pedestrian", "person", "rider"]:
+                reasons.append("stop_pedestrian")
             elif cat in ["car", "bus", "truck", "train", "motor", "bike"]:
-                reason = "stop_vehicle"
-                break
+                reasons.append("stop_vehicle")
 
-            # Priority 4: Obstacles
-            elif cat not in ["drivable area", "lane marking", "traffic sign"]:
-                reason = "stop_obstacle"
+        # PRIORITY RESOLUTION: We only pick one definitive reason
+        if "stop_red_light" in reasons:
+            final_a = "stop_red_light"
+        elif "stop_pedestrian" in reasons:
+            final_a = "stop_pedestrian"
+        elif "stop_vehicle" in reasons:
+            final_a = "stop_vehicle"
+        else:
+            final_a = "safe"
 
-        return [{"q": "Can I move forward?", "a": reason, "type": "safety"}]
+        return [{"q": "Can I move forward?", "a": final_a, "type": "safety"}]
 
-    def _generate_color(self, objects):
-        commands = []
-        lights = [o for o in objects if o["category"] == "traffic light"]
-        for light in lights:
-            color = light.get("attributes", {}).get("trafficLightColor", "none")
-            if color in ["red", "green", "yellow"]:
-                commands.append(
-                    {"q": f"Is the traffic light {color}?", "a": "yes", "type": "state"}
-                )
-                fake = "red" if color == "green" else "green"
-                commands.append(
-                    {"q": f"Is the traffic light {fake}?", "a": "no", "type": "state"}
-                )
-                break
-        return commands
+    def _generate_detection(self, objects):
+        """Generates yes/no questions based on visible, non-occluded objects."""
+        visible_cats = {
+            o["category"] for o in objects if not o.get("attributes", {}).get("occluded")
+        }
+        if "person" in visible_cats:
+            visible_cats.add("pedestrian")
+
+        targets = ["car", "pedestrian", "traffic light", "truck", "bus"]
+        cmds = []
+        for t in targets:
+            ans = "yes" if t in visible_cats else "no"
+            cmds.append({"q": f"Is there a {t}?", "a": ans, "type": "detection"})
+        return cmds
+
+    def _generate_context(self, attributes):
+        """Encodes weather and time of day."""
+        cmds = []
+        for attr in ["weather", "timeofday"]:
+            val = attributes.get(attr, "undefined")
+            if val != "undefined":
+                cmds.append({"q": f"What is the {attr}?", "a": val, "type": "context"})
+        return cmds
 
     def _balance_safety_data(self, commands):
-        safety_cmds = [c for c in commands if c["type"] == "safety"]
+        """Balances safety classes to ensure rare events (pedestrians) are seen."""
+        safety = [c for c in commands if c["type"] == "safety"]
         others = [c for c in commands if c["type"] != "safety"]
-
-        if not safety_cmds:
+        if not safety:
             return commands
 
         groups = {}
-        for cmd in safety_cmds:
-            ans = cmd["a"]
-            if ans not in groups:
-                groups[ans] = []
-            groups[ans].append(cmd)
+        for c in safety:
+            groups[c["a"]] = groups.get(c["a"], []) + [c]
 
-        max_count = max(len(g) for g in groups.values())
-        print(f"   Balancing Safety Classes (Target: {max_count}):")
+        target_count = max(len(g) for g in groups.values())
+        print(f"   Balancing Safety Classes (Target: {target_count}):")
 
-        balanced_safety = []
+        balanced = []
         for ans, group in groups.items():
-            count = len(group)
-            print(f"     - {ans}: {count} -> {max_count}")
-            if count < max_count:
-                if count == 0:
-                    continue
-                factor = max_count // count
-                remainder = max_count % count
-                group = (group * factor) + group[:remainder]
-            balanced_safety.extend(group)
+            print(f"     - {ans}: {len(group)} -> {target_count}")
+            factor = target_count // len(group)
+            balanced.extend((group * factor) + group[: target_count % len(group)])
 
-        final = others + balanced_safety
+        final = balanced + others
         random.shuffle(final)
         return final
 
-    def generate_commands_for_split(self, split_name):
+    def generate_commands_for_split(self, split_name: str):
         h5_path = os.path.join(self.cfg.output_dir, f"{split_name}.h5")
         if not os.path.exists(h5_path):
-            print(f"File not found: {h5_path}")
+            print(f"H5 file not found: {h5_path}")
             return
 
         print(f"Generating commands for {split_name}...")
-        raw_commands = []
+        raw_cmds = []
 
         with h5py.File(h5_path, "r") as hf:
+            # 1. Access the dataset
             meta_ds = hf["metadata"]
-            if isinstance(meta_ds, h5py.Dataset):
-                for idx in tqdm(range(len(meta_ds))):
-                    meta = json.loads(meta_ds[idx].decode("utf-8"))
 
-                    objects = []
-                    if "frames" in meta and len(meta["frames"]) > 0:
-                        objects = meta["frames"][0].get("objects", [])
+            # 2. TYPE NARROWING: Explicitly verify this is an h5py Dataset for Pylance
+            if not isinstance(meta_ds, h5py.Dataset):
+                print(f"Error: 'metadata' in {h5_path} is not a Dataset.")
+                return
 
-                    attributes = meta.get("attributes", {})
+            # 3. Iterate
+            for idx in tqdm(range(len(meta_ds)), desc=f"Scanning {split_name}"):
+                # 4. Fetch raw data safely
+                raw_data = meta_ds[idx]
 
-                    cmds = []
-                    cmds.extend(self._generate_detection(objects))
-                    cmds.extend(self._generate_safety(objects))
-                    cmds.extend(self._generate_color(objects))
-                    cmds.extend(self._generate_context(attributes))
+                # 5. Handle type safely (bytes vs str)
+                if isinstance(raw_data, bytes):
+                    json_str = raw_data.decode("utf-8")
+                else:
+                    json_str = str(raw_data)
 
-                    for c in cmds:
-                        c["image_idx"] = idx
-                        raw_commands.append(c)
-            else:
-                print("Error reading metadata.")
+                meta = json.loads(json_str)
 
-        final_commands = self._balance_safety_data(raw_commands)
+                objs = meta["frames"][0].get("objects", []) if "frames" in meta else []
+                attrs = meta.get("attributes", {})
 
+                frame_cmds = []
+                frame_cmds.extend(self._generate_safety(objs))
+                frame_cmds.extend(self._generate_detection(objs))
+                frame_cmds.extend(self._generate_context(attrs))
+
+                for c in frame_cmds:
+                    c["image_idx"] = idx
+                    raw_cmds.append(c)
+
+        if not raw_cmds:
+            print(f"No commands generated for {split_name}.")
+            return
+
+        final = self._balance_safety_data(raw_cmds)
         out_path = os.path.join(self.cfg.output_dir, f"{split_name}_commands.json")
+
+        os.makedirs(os.path.dirname(out_path), exist_ok=True)
         with open(out_path, "w") as f:
-            json.dump(final_commands, f, indent=2)
-        print(f"Saved {len(final_commands)} commands to {out_path}")
+            json.dump(final, f, indent=2)
+
+        print(f"Successfully saved {len(final)} commands to {out_path}")
 
 
 if __name__ == "__main__":
     gen = CommandGenerator()
-    gen.generate_commands_for_split("train")
-    gen.generate_commands_for_split("val")
-    gen.generate_commands_for_split("test")
+    for s in ["train", "val", "test"]:
+        gen.generate_commands_for_split(s)

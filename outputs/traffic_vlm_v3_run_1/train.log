@@ -1,0 +1,30 @@
+2026-01-07 13:18:02 [INFO] Dataset Config: {'root_dir': 'data\\raw', 'output_dir': 'data\\processed', 'images_dir_name': 'images', 'labels_dir_name': 'labels', 'image_size': 128, 'max_seq_len': 32, 'mean': [0.485, 0.456, 0.406], 'std': [0.229, 0.224, 0.225], 'allowed_weather': ['clear', 'partly cloudy', 'overcast', 'rainy', 'snowy', 'foggy', 'undefined'], 'allowed_time': ['daytime', 'night', 'dawn/dusk', 'undefined'], 'label_map': {'yes': 0, 'safe': 0, 'no': 1, 'stop_red_light': 2, 'stop_pedestrian': 3, 'stop_vehicle': 4, 'stop_obstacle': 5}, 'num_classes': 6}
+2026-01-07 13:18:02 [INFO] Experiment: traffic_vlm_v3_run_1
+2026-01-07 13:18:02 [INFO] Device: cuda
+2026-01-07 13:18:03 [INFO] Loading Data...
+2026-01-07 13:18:03 [INFO] Vocab Size: 37
+2026-01-07 13:18:04 [INFO] Train Batches: 19364 | Val Batches: 2776
+2026-01-07 13:18:04 [INFO] Initializing Model...
+2026-01-07 13:18:05 [INFO] Trainable Parameters: 8.88M
+2026-01-07 13:18:05 [INFO] Starting Training...
+2026-01-07 13:41:40 [INFO] Epoch 1/10 | Train Loss: 0.5267 | Val Loss: 0.5067 | Val Acc: 76.86%
+2026-01-07 13:41:58 [INFO] Visualizations saved to outputs\traffic_vlm_v3_run_1/visualizations/epoch_1
+2026-01-07 14:04:46 [INFO] Epoch 2/10 | Train Loss: 0.5047 | Val Loss: 0.5016 | Val Acc: 77.40%
+2026-01-07 14:05:03 [INFO] Visualizations saved to outputs\traffic_vlm_v3_run_1/visualizations/epoch_2
+2026-01-07 14:31:05 [INFO] Epoch 3/10 | Train Loss: 0.4969 | Val Loss: 0.4954 | Val Acc: 77.95%
+2026-01-07 14:31:32 [INFO] Visualizations saved to outputs\traffic_vlm_v3_run_1/visualizations/epoch_3
+2026-01-07 15:02:20 [INFO] Epoch 4/10 | Train Loss: 0.4927 | Val Loss: 0.4883 | Val Acc: 78.45%
+2026-01-07 15:02:39 [INFO] Visualizations saved to outputs\traffic_vlm_v3_run_1/visualizations/epoch_4
+2026-01-07 15:25:47 [INFO] Epoch 5/10 | Train Loss: 0.4887 | Val Loss: 0.4883 | Val Acc: 78.39%
+2026-01-07 15:26:04 [INFO] Visualizations saved to outputs\traffic_vlm_v3_run_1/visualizations/epoch_5
+2026-01-07 15:48:23 [INFO] Epoch 6/10 | Train Loss: 0.4850 | Val Loss: 0.4846 | Val Acc: 78.72%
+2026-01-07 15:48:40 [INFO] Visualizations saved to outputs\traffic_vlm_v3_run_1/visualizations/epoch_6
+2026-01-07 16:09:24 [INFO] Epoch 7/10 | Train Loss: 0.4811 | Val Loss: 0.4821 | Val Acc: 78.85%
+2026-01-07 16:09:42 [INFO] Visualizations saved to outputs\traffic_vlm_v3_run_1/visualizations/epoch_7
+2026-01-07 16:31:37 [INFO] Epoch 8/10 | Train Loss: 0.4773 | Val Loss: 0.4810 | Val Acc: 78.96%
+2026-01-07 16:31:54 [INFO] Visualizations saved to outputs\traffic_vlm_v3_run_1/visualizations/epoch_8
+2026-01-07 16:53:31 [INFO] Epoch 9/10 | Train Loss: 0.4745 | Val Loss: 0.4810 | Val Acc: 78.99%
+2026-01-07 16:53:49 [INFO] Visualizations saved to outputs\traffic_vlm_v3_run_1/visualizations/epoch_9
+2026-01-07 17:15:37 [INFO] Epoch 10/10 | Train Loss: 0.4729 | Val Loss: 0.4811 | Val Acc: 79.03%
+2026-01-07 17:15:54 [INFO] Visualizations saved to outputs\traffic_vlm_v3_run_1/visualizations/epoch_10
+2026-01-07 17:15:54 [INFO] Done.

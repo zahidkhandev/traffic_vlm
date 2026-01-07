@@ -1,10 +1,10 @@
 import json
 import os
-from typing import Any  # <--- Added this
+from typing import Any
 
 import h5py
-import numpy as np
 import torch
+import torchvision.transforms.v2 as T
 from torch.utils.data import DataLoader, Dataset
 
 from config.dataset_config import DatasetConfig
@@ -13,25 +13,48 @@ from data.tokenizer import SimpleTokenizer
 
 class TrafficDataset(Dataset):
     """
-    PyTorch Dataset for Traffic VLM.
-    Loads images from H5 and commands from JSON.
+    Production PyTorch Dataset for Traffic VLM.
+    Integrates heavy augmentation for training to prevent overfitting and memorization.
     """
 
     def __init__(self, split_name):
         self.cfg = DatasetConfig()
         self.tokenizer = SimpleTokenizer()
         self.tokenizer.load_vocab()
+        self.split = split_name
 
-        cmd_path = os.path.join(self.cfg.output_dir, f"{split_name}_commands.json")
-        if not os.path.exists(cmd_path):
-            raise FileNotFoundError(f"Commands file not found: {cmd_path}")
+        # HEAVY PRODUCTION AUGMENTATION
+        # Training: Jitter color/grayscale + Normalize
+        if self.split == "train":
+            self.transform = T.Compose(
+                [
+                    T.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.3, hue=0.1),
+                    T.RandomGrayscale(p=0.1),
+                    T.ToDtype(torch.float32, scale=True),
+                    T.Normalize(mean=self.cfg.mean, std=self.cfg.std),
+                ]
+            )
+        # Validation/Test: Just Normalize
+        else:
+            self.transform = T.Compose(
+                [
+                    T.ToDtype(torch.float32, scale=True),
+                    T.Normalize(mean=self.cfg.mean, std=self.cfg.std),
+                ]
+            )
 
-        with open(cmd_path, "r") as f:
-            self.commands = json.load(f)
-
+        # Load file paths
+        self.cmd_path = os.path.join(self.cfg.output_dir, f"{split_name}_commands.json")
         self.h5_path = os.path.join(self.cfg.output_dir, f"{split_name}.h5")
+
+        if not os.path.exists(self.cmd_path):
+            raise FileNotFoundError(f"Commands file not found: {self.cmd_path}")
+
         if not os.path.exists(self.h5_path):
-            raise FileNotFoundError(f"Images file not found: {self.h5_path}")
+            raise FileNotFoundError(f"H5 file not found: {self.h5_path}")
+
+        with open(self.cmd_path, "r") as f:
+            self.commands = json.load(f)
 
         self.h5_file = None
         self.images: Any = None
@@ -40,39 +63,33 @@ class TrafficDataset(Dataset):
         return len(self.commands)
 
     def __getitem__(self, idx):
-        # Open H5 file once per worker
+        # Open H5 file lazily in the worker process
         if self.h5_file is None:
             self.h5_file = h5py.File(self.h5_path, "r")
             self.images = self.h5_file["images"]
 
-        # Explicit check prevents runtime errors, 'Any' prevents linter errors
+        # Type check to satisfy strict Pylance
         if self.images is None:
             raise RuntimeError("H5 images dataset failed to load.")
 
         cmd = self.commands[idx]
         image_idx = cmd["image_idx"]
 
-        # Load Image
-        # Pylance will now accept this line because self.images is Any
-        image = self.images[image_idx]
-        image = torch.tensor(image).permute(2, 0, 1).float() / 255.0
+        # 1. Load image and convert to Tensor [C, H, W]
+        # h5py returns numpy array, we convert to torch
+        img_raw = torch.from_numpy(self.images[image_idx]).permute(2, 0, 1)
 
-        # Normalize
-        mean = torch.tensor(self.cfg.mean).view(3, 1, 1)
-        std = torch.tensor(self.cfg.std).view(3, 1, 1)
-        image = (image - mean) / std
+        # 2. Apply augmentation (Jitter/Normalize)
+        image = self.transform(img_raw)
 
-        # Load Text
-        q_text = cmd["q"]
-        input_ids = self.tokenizer.encode(q_text, max_len=self.cfg.max_seq_len)
+        # 3. Tokenize Question
+        input_ids = self.tokenizer.encode(cmd["q"], max_len=self.cfg.max_seq_len)
 
-        # Load Label using MAP
+        # 4. Map Answer to Label ID
         a_text = cmd["a"].lower().strip()
-
-        if a_text in self.cfg.label_map:
-            label_id = self.cfg.label_map[a_text]
-        else:
-            label_id = 1  # Fallback to No/Unsafe
+        label_id = self.cfg.label_map.get(
+            a_text, 1
+        )  # Fallback to 1 (No/Unsafe) if unknown
 
         return {
             "image": image,
@@ -81,7 +98,7 @@ class TrafficDataset(Dataset):
         }
 
 
-def get_dataloader(split_name, batch_size=4, num_workers=0, shuffle=True):
+def get_dataloader(split_name, batch_size=32, num_workers=4, shuffle=True):
     dataset = TrafficDataset(split_name)
     return DataLoader(
         dataset,
@@ -93,8 +110,9 @@ def get_dataloader(split_name, batch_size=4, num_workers=0, shuffle=True):
 
 
 if __name__ == "__main__":
+    # Sanity check
     loader = get_dataloader("train", batch_size=2)
-    print("Testing DataLoader...")
+    print("Testing DataLoader for 'train' with Augmentation...")
     for batch in loader:
-        print(f"Labels: {batch['label']}")
+        print(f"Batch Loaded -> Images: {batch['image'].shape}, Labels: {batch['label']}")
         break
