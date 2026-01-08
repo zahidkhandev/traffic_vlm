@@ -79,7 +79,7 @@ if __name__ == "__main__":
     # Example: checkpoints/vlm_run_01/checkpoint_epoch_0.pt
     # Since you are still training, you can verify with epoch 0 once it saves
 
-    CHECKPOINT = "checkpoints/traffic_vlm_v2/best_model.pt"
+    CHECKPOINT = "checkpoints/traffic_vlm_v3_run_1/best_model.pt"
 
     if os.path.exists(CHECKPOINT):
         analyze_model(CHECKPOINT)

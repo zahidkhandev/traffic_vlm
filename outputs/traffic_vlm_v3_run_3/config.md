@@ -1,9 +1,8 @@
 from dataclasses import dataclass
 
-
 @dataclass
 class TrainingConfig:
-    """Hyperparameters for the training loop"""
+"""Hyperparameters for the training loop"""
 
     # Optimization
     batch_size: int = 4

@@ -3,6 +3,8 @@ import os
 import random
 
 import h5py
+import matplotlib.path as mplPath
+import numpy as np
 from tqdm import tqdm
 
 from config.dataset_config import DatasetConfig
@@ -11,7 +13,11 @@ from config.dataset_config import DatasetConfig
 class CommandGenerator:
     """
     Generates linguistically diverse and spatially accurate VLM commands.
-    Implements priority-based safety logic: Red Light > Pedestrian > Vehicle.
+
+    MAJOR UPDATE:
+    - Replaced rectangular crop with Trapezoidal Lane Logic (ROI).
+    - Uses 'feet' position (bottom-center) of boxes to determine distance/lane.
+    - Improved occlusion logic (ignores occlusion if object is very close/dangerous).
     """
 
     def __init__(self):
@@ -19,71 +25,121 @@ class CommandGenerator:
         self.image_width = 1280
         self.image_height = 720
 
-        # PRODUCTION SPATIAL BOTTLENECK
-        # We only care about objects in the 'ego-lane' (approx 30% center width)
-        self.ego_left = self.image_width * 0.35
-        self.ego_right = self.image_width * 0.65
+        # --- SPATIAL CONFIGURATION ---
 
-        # HORIZON THRESHOLD
-        # Objects above 45% of the image height are too far to require stopping.
+        # 1. Horizon Line: Objects above this Y-value are too far away.
         self.horizon_y = self.image_height * 0.45
 
+        # 2. Driving Corridor (Trapezoid)
+        # We define a polygon that mimics the perspective of a road lane.
+        # Top points (Horizon) are narrow; Bottom points (Hood) are wide.
+        self.roi_polygon = [
+            (self.image_width * 0.40, self.horizon_y),  # Top-Left
+            (self.image_width * 0.60, self.horizon_y),  # Top-Right
+            (self.image_width * 0.95, self.image_height),  # Bottom-Right (Hood)
+            (self.image_width * 0.05, self.image_height),  # Bottom-Left (Hood)
+        ]
+        self.lane_path = mplPath.Path(self.roi_polygon)
+
+    def _point_in_lane(self, x, y):
+        """Checks if a specific point (x, y) is inside the driving corridor."""
+        return self.lane_path.contains_point((x, y))
+
     def _is_relevant(self, box, category):
-        """Determines if an object is physically in the path and close enough to matter."""
-        center_x = (box["x1"] + box["x2"]) / 2
-        bottom_y = box["y2"]
+        """
+        Determines if an object is relevant based on road geometry.
+        Uses the 'feet' (bottom-center) of the object for ground placement.
+        """
+        # 1. Calculate Key Metrics
+        foot_x = (box["x1"] + box["x2"]) / 2
+        foot_y = box["y2"]  # The point where the object touches the road
+
         box_h = box["y2"] - box["y1"]
-        height_ratio = box_h / self.image_height
+        box_area = (box["x2"] - box["x1"]) * box_h
+        img_area = self.image_width * self.image_height
+        coverage = box_area / img_area
 
-        # 1. Horizontal path check (Ego-lane)
-        in_path = self.ego_left < center_x < self.ego_right
-
-        # 2. Distance check (Horizon & Height)
-        # Objects at the horizon or extremely small are ignored for safety labels
-        is_close = bottom_y > self.horizon_y and height_ratio > 0.04
-
-        # Traffic lights have a wider relevance zone but strict vertical height requirement
+        # 2. Traffic Light Logic (Special Case)
+        # Lights are not "on the road", they are in the air.
         if category == "traffic light":
-            # Traffic lights can be slightly off-center (above the lane)
-            light_relevant = (
-                (self.image_width * 0.25) < center_x < (self.image_width * 0.75)
-            )
-            return light_relevant and height_ratio > 0.02
+            # Must be relatively large/close OR very bright/central
+            is_large_enough = (box_h / self.image_height) > 0.025
 
-        return in_path and is_close
+            # Widen the x-check for lights (often on poles to the side)
+            is_centered = (self.image_width * 0.20) < foot_x < (self.image_width * 0.80)
+
+            # Must be in the upper 2/3rds of the image (lights aren't on the floor)
+            is_high_up = foot_y < (self.image_height * 0.65)
+
+            return is_large_enough and is_centered and is_high_up
+
+        # 3. Ground Object Logic (Cars, Peds)
+
+        # A. Horizon Check: Is it too far away?
+        if foot_y < self.horizon_y:
+            return False
+
+        # B. Geometry Check: Are the feet inside our lane trapezoid?
+        in_corridor = self._point_in_lane(foot_x, foot_y)
+
+        # C. Danger Check: Is it huge?
+        # If an object covers >5% of the screen, it's relevant regardless of alignment
+        # (e.g., a car cutting in from the side close up).
+        is_huge = coverage > 0.05
+
+        return in_corridor or is_huge
 
     def _generate_safety(self, objects):
-        """Prioritizes stop reasons to prevent 'noisy' overlapping labels."""
+        """Prioritizes stop reasons with improved occlusion handling."""
         reasons = []
 
         for obj in objects:
             if "box2d" not in obj:
                 continue
+
             cat = obj["category"]
             attr = obj.get("attributes", {})
+            box = obj["box2d"]
 
-            # Filter out occluded or irrelevant objects
-            if attr.get("occluded") is True and cat != "traffic light":
-                continue
-            if not self._is_relevant(obj["box2d"], cat):
+            # --- OCCLUSION FILTERING ---
+            is_occluded = attr.get("occluded", False)
+            box_h = box["y2"] - box["y1"]
+
+            # If occluded, only ignore it if it's ALSO small/far.
+            # If a pedestrian is occluded but huge (close), we MUST stop.
+            if is_occluded and cat != "traffic light":
+                if (box_h / self.image_height) < 0.10:
+                    continue
+
+            # --- RELEVANCE FILTERING ---
+            if not self._is_relevant(box, cat):
                 continue
 
-            # Logic check by priority
+            # --- CATEGORY LOGIC ---
             if cat == "traffic light":
-                if attr.get("trafficLightColor") == "red":
+                # Stop for Red or Yellow (Yellow implies caution/stop usually)
+                if attr.get("trafficLightColor") in ["red", "yellow"]:
                     reasons.append("stop_red_light")
+
             elif cat in ["pedestrian", "person", "rider"]:
                 reasons.append("stop_pedestrian")
-            elif cat in ["car", "bus", "truck", "train", "motor", "bike"]:
-                reasons.append("stop_vehicle")
 
-        # PRIORITY RESOLUTION: We only pick one definitive reason
+            elif cat in ["car", "bus", "truck", "train", "motor", "bike"]:
+                # (Optional) Check 'parked' attribute here if your dataset has it
+                if attr.get("state") != "parked":
+                    reasons.append("stop_vehicle")
+
+        # --- PRIORITY RESOLUTION ---
+        # 1. Red Light (Legal imperative)
         if "stop_red_light" in reasons:
             final_a = "stop_red_light"
+        # 2. Pedestrian (Human safety)
         elif "stop_pedestrian" in reasons:
             final_a = "stop_pedestrian"
+        # 3. Vehicle (Traffic flow)
         elif "stop_vehicle" in reasons:
             final_a = "stop_vehicle"
+        # 4. Safe
         else:
             final_a = "safe"
 
@@ -117,6 +173,7 @@ class CommandGenerator:
         """Balances safety classes to ensure rare events (pedestrians) are seen."""
         safety = [c for c in commands if c["type"] == "safety"]
         others = [c for c in commands if c["type"] != "safety"]
+
         if not safety:
             return commands
 
@@ -124,14 +181,23 @@ class CommandGenerator:
         for c in safety:
             groups[c["a"]] = groups.get(c["a"], []) + [c]
 
+        # Avoid empty sequence error if groups is empty
+        if not groups:
+            return commands
+
         target_count = max(len(g) for g in groups.values())
         print(f"   Balancing Safety Classes (Target: {target_count}):")
 
         balanced = []
         for ans, group in groups.items():
-            print(f"     - {ans}: {len(group)} -> {target_count}")
-            factor = target_count // len(group)
-            balanced.extend((group * factor) + group[: target_count % len(group)])
+            count = len(group)
+            print(f"     - {ans}: {count} -> {target_count}")
+            if count == 0:
+                continue
+
+            factor = target_count // count
+            remainder = target_count % count
+            balanced.extend((group * factor) + group[:remainder])
 
         final = balanced + others
         random.shuffle(final)
@@ -147,20 +213,16 @@ class CommandGenerator:
         raw_cmds = []
 
         with h5py.File(h5_path, "r") as hf:
-            # 1. Access the dataset
             meta_ds = hf["metadata"]
 
-            # 2. TYPE NARROWING: Explicitly verify this is an h5py Dataset for Pylance
             if not isinstance(meta_ds, h5py.Dataset):
                 print(f"Error: 'metadata' in {h5_path} is not a Dataset.")
                 return
 
-            # 3. Iterate
+            # Use tqdm for progress tracking
             for idx in tqdm(range(len(meta_ds)), desc=f"Scanning {split_name}"):
-                # 4. Fetch raw data safely
                 raw_data = meta_ds[idx]
 
-                # 5. Handle type safely (bytes vs str)
                 if isinstance(raw_data, bytes):
                     json_str = raw_data.decode("utf-8")
                 else:
@@ -168,6 +230,7 @@ class CommandGenerator:
 
                 meta = json.loads(json_str)
 
+                # Safe access to objects and attributes
                 objs = meta["frames"][0].get("objects", []) if "frames" in meta else []
                 attrs = meta.get("attributes", {})
 
