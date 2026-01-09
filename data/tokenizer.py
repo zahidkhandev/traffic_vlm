@@ -7,16 +7,17 @@ from config.dataset_config import DatasetConfig
 
 class SimpleTokenizer:
     """
-    A simple word-level tokenizer for the Traffic VLM.
-    Handles vocabulary building, encoding, and decoding with special tokens.
+    A simple word-level tokenizer.
+    Builds vocabulary STRICTLY from the provided dataset files.
+    No frequency filtering, no hardcoded forced tokens.
     """
 
     def __init__(self):
-        """Initialize the tokenizer with config and special tokens."""
         self.cfg = DatasetConfig()
         self.vocab = {}
         self.inverse_vocab = {}
 
+        # Essential special tokens only
         self.specials = ["[PAD]", "[SOS]", "[EOS]", "[UNK]"]
         self.pad_token_id = 0
         self.sos_token_id = 1
@@ -25,68 +26,63 @@ class SimpleTokenizer:
 
     def build_vocabulary(self, command_files):
         """
-        Scans the provided JSON command files to build a unique vocabulary.
-
-        Args:
-            command_files (list): List of filenames (e.g., ['train_commands.json'])
+        Scans provided JSON files and adds EVERY unique word found to the vocabulary.
         """
-        print("Building vocabulary...")
+        print(f"Building vocabulary from: {command_files}")
         unique_words = set()
 
-        for file_path in command_files:
-            full_path = os.path.join(self.cfg.output_dir, file_path)
+        for file_name in command_files:
+            full_path = os.path.join(self.cfg.output_dir, file_name)
+
             if not os.path.exists(full_path):
-                print(f"Warning: {full_path} not found.")
+                print(f"Warning: {full_path} not found. Skipping.")
                 continue
 
             with open(full_path, "r") as f:
-                commands = json.load(f)
+                try:
+                    commands = json.load(f)
+                except json.JSONDecodeError:
+                    print(f"Error decoding {file_name}. Skipping.")
+                    continue
+
+            print(f"  - Scanning {len(commands)} commands in {file_name}...")
 
             for item in commands:
+                # Add words from Question
                 q_words = self._clean_and_split(item["q"])
                 unique_words.update(q_words)
 
+                # Add words from Answer
                 a_words = self._clean_and_split(item["a"])
                 unique_words.update(a_words)
 
+        # Sort for deterministic ordering
         sorted_words = sorted(list(unique_words))
 
+        # Assign IDs starting after special tokens
         self.vocab = {
             word: idx + len(self.specials) for idx, word in enumerate(sorted_words)
         }
 
+        # Add special tokens
         for idx, token in enumerate(self.specials):
             self.vocab[token] = idx
 
         self.inverse_vocab = {v: k for k, v in self.vocab.items()}
 
-        print(f"Vocabulary built: {len(self.vocab)} tokens.")
+        print(f"Vocabulary built: {len(self.vocab)} unique tokens.")
         self.save_vocab()
 
     def _clean_and_split(self, text):
-        """
-        Preprocesses text by lowercasing and removing punctuation.
-
-        Returns:
-            list: A list of cleaned words.
-        """
+        """Standard preprocessing: Lowercase + Remove punctuation."""
         text = text.lower()
         text = re.sub(r"[^\w\s]", "", text)
         return text.split()
 
     def encode(self, text, max_len=None):
-        """
-        Converts a string into a list of token IDs.
-        Adds [SOS] at the start and [EOS] at the end.
-
-        Args:
-            text (str): The input sentence.
-            max_len (int, optional): Max length for padding/truncation.
-
-        Returns:
-            list: List of integers (token IDs).
-        """
+        """Encodes text to IDs."""
         words = self._clean_and_split(text)
+        # If word exists in vocab, use ID. Else use [UNK]
         ids = [self.vocab.get(w, self.unk_token_id) for w in words]
 
         ids = [self.sos_token_id] + ids + [self.eos_token_id]
@@ -101,18 +97,14 @@ class SimpleTokenizer:
         return ids
 
     def decode(self, ids):
-        """
-        Converts a list of token IDs back into a string.
-        Stops at [EOS] and ignores [PAD] and [SOS].
-
-        Args:
-            ids (list): List of integers.
-
-        Returns:
-            str: The decoded sentence.
-        """
+        """Decodes IDs to text."""
         words = []
         for idx in ids:
+            if isinstance(idx, list):
+                idx = idx[0]
+            if hasattr(idx, "item"):
+                idx = idx.item()  # Handle Tensor inputs
+
             if idx == self.pad_token_id:
                 continue
             if idx == self.eos_token_id:
@@ -125,14 +117,12 @@ class SimpleTokenizer:
         return " ".join(words)
 
     def save_vocab(self):
-        """Saves the vocabulary dictionary to a JSON file."""
         path = os.path.join(self.cfg.output_dir, "vocab.json")
         with open(path, "w") as f:
             json.dump(self.vocab, f, indent=2)
         print(f"Saved vocabulary to {path}")
 
     def load_vocab(self):
-        """Loads the vocabulary from the JSON file."""
         path = os.path.join(self.cfg.output_dir, "vocab.json")
         if os.path.exists(path):
             with open(path, "r") as f:
@@ -145,12 +135,16 @@ class SimpleTokenizer:
 
 if __name__ == "__main__":
     tokenizer = SimpleTokenizer()
-    tokenizer.build_vocabulary(["train_commands.json", "val_commands.json"])
 
+    # CRITICAL: Include ALL splits so the test set doesn't have [UNK] words
+    # that were only present in validation/test but not train.
+    tokenizer.build_vocabulary(
+        ["train_commands.json", "val_commands.json", "test_commands.json"]
+    )
+
+    # Test
     test_str = "Is there a red car?"
-    ids = tokenizer.encode(test_str, max_len=10)
-    decoded = tokenizer.decode(ids)
-
-    print(f"\nTest Sentence: '{test_str}'")
-    print(f"Encoded IDs: {ids}")
-    print(f"Decoded: '{decoded}'")
+    ids = tokenizer.encode(test_str)
+    print(f"\nString: '{test_str}'")
+    print(f"IDs: {ids}")
+    print(f"Decoded: '{tokenizer.decode(ids)}'")

@@ -52,6 +52,7 @@ coverage.xml
 # IDEs
 .vscode/
 .idea/
+.gradio
 
 # Project Specific - IGNORE DATASETS AND MODELS
 # (We do not want to upload 100GB of images or 500MB model weights to GitHub)

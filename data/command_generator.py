@@ -147,17 +147,45 @@ class CommandGenerator:
 
     def _generate_detection(self, objects):
         """Generates yes/no questions based on visible, non-occluded objects."""
-        visible_cats = {
-            o["category"] for o in objects if not o.get("attributes", {}).get("occluded")
-        }
+        visible_objs = [o for o in objects if not o.get("attributes", {}).get("occluded")]
+
+        visible_cats = {o["category"] for o in visible_objs}
         if "person" in visible_cats:
             visible_cats.add("pedestrian")
 
         targets = ["car", "pedestrian", "traffic light", "truck", "bus"]
         cmds = []
+
+        # 1. Standard Detection
         for t in targets:
             ans = "yes" if t in visible_cats else "no"
             cmds.append({"q": f"Is there a {t}?", "a": ans, "type": "detection"})
+
+        # 2. Color Detection (Cars/Lights) - NEW
+        for obj in visible_objs:
+            cat = obj["category"]
+            color = None
+
+            # Extract color if available
+            # BDD100K often puts vehicle color in 'attributes' -> 'vehicleColor' ?
+            # Or Traffic light color in 'trafficLightColor'
+
+            if cat == "traffic light":
+                color = obj.get("attributes", {}).get("trafficLightColor")
+
+            # (Note: Standard BDD100K doesn't always label car color reliably in all subsets,
+            # but usually traffic light color is there).
+
+            if color and color not in ["undefined", "none"]:
+                # Generate a specific color question
+                cmds.append(
+                    {
+                        "q": f"Is there a {color} {cat}?",
+                        "a": "yes",
+                        "type": "detection_color",
+                    }
+                )
+
         return cmds
 
     def _generate_context(self, attributes):

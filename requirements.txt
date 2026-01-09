@@ -13,3 +13,6 @@ ipykernel
 notebook
 opencv-python
 seaborn
+gradio
+gradio_client
+transformers
