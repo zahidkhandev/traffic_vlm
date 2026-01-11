@@ -124,7 +124,6 @@ class GemmaDecoderLayer(nn.Module):
         # 1. Self Attention
         residual = hidden_states
         normed_states = self.input_layernorm(hidden_states)
-        # Note: We don't usually capture self-attn weights for this specific VLM task, but passing flag is fine
         attn_out, _ = self.self_attn(
             normed_states,
             attention_mask=attention_mask,
@@ -142,7 +141,7 @@ class GemmaDecoderLayer(nn.Module):
             attn_out, cross_attn_weights = self.cross_attn(
                 normed_states,
                 encoder_hidden_states=encoder_hidden_states,
-                output_attentions=output_attentions,  # Capture this!
+                output_attentions=output_attentions,
             )
             hidden_states = residual + attn_out
 

@@ -124,7 +124,6 @@ class TrafficVLMDemo:
         if image is None:
             return {"Warning: No Image": 1.0}, "No image provided"
 
-        # FIXED QUESTION - matches training exactly
         question = "Can I move forward?"
 
         print(f"\n{'=' * 60}")

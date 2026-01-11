@@ -70,18 +70,15 @@ class CommandGenerator:
             attr = obj.get("attributes", {})
             box = obj["box2d"]
 
-            # Occlusion Check
             is_occluded = attr.get("occluded", False)
             box_h = box["y2"] - box["y1"]
             if is_occluded and cat != "traffic light":
                 if (box_h / self.image_height) < 0.10:
                     continue
 
-            # Relevance Check
             if not self._is_relevant(box, cat):
                 continue
 
-            # --- UPDATED CATEGORY LOGIC ---
             if cat == "traffic light":
                 if attr.get("trafficLightColor") in ["red", "yellow"]:
                     reasons.append("stop_red_light")
@@ -93,12 +90,9 @@ class CommandGenerator:
                 if attr.get("state") != "parked":
                     reasons.append("stop_vehicle")
 
-            # --- NEW: OBSTACLE DETECTION ---
             elif cat in ["barrier", "traffic cone", "traffic sign", "trailer", "other"]:
-                # If a barrier or cone is IN THE LANE (checked by _is_relevant), it's a stop.
                 reasons.append("stop_obstacle")
 
-        # --- UPDATED PRIORITY RESOLUTION ---
         if "stop_red_light" in reasons:
             final_a = "stop_red_light"
         elif "stop_pedestrian" in reasons:

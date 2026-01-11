@@ -27,7 +27,6 @@ class SigLipVisionEmbeddings(nn.Module):
 
         self.num_patches = (self.image_size // self.patch_size) ** 2
 
-        # FIX: Missing line added here
         self.position_embedding = nn.Embedding(self.num_patches, self.embed_dim)
 
         self.register_buffer(
@@ -40,7 +39,6 @@ class SigLipVisionEmbeddings(nn.Module):
         patch_embeds = self.patch_embedding(pixel_values)
         embeddings = patch_embeds.flatten(2).transpose(1, 2)
 
-        # This will now work because self.position_embedding is defined
         embeddings = embeddings + self.position_embedding(self.position_ids)
 
         return embeddings

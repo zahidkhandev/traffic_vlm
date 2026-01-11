@@ -2,9 +2,6 @@ import os
 
 from PIL import Image
 
-# ==========================
-# CONFIG
-# ==========================
 RUN_NAME = "traffic_vlm_v4_run_1"
 BASE_DIR = os.path.join("outputs", RUN_NAME, "visualizations")
 RESULTS_DIR = os.path.join(BASE_DIR, "results")
@@ -50,7 +47,6 @@ def main():
     if not os.path.isdir(BASE_DIR):
         raise FileNotFoundError(f"Base directory not found: {BASE_DIR}")
 
-    # Create results folder once
     os.makedirs(RESULTS_DIR, exist_ok=True)
 
     for folder in sorted(os.listdir(BASE_DIR)):

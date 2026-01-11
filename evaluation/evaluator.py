@@ -29,7 +29,6 @@ class Evaluator:
 
         with torch.no_grad():
             for batch in tqdm(self.dataloader, desc="Running Evaluation"):
-                # FIX: Keys updated to match TrafficDataset ("image", "label")
                 pixel_values = batch["image"].to(self.device)
                 input_ids = batch["input_ids"].to(self.device)
                 labels = batch["label"].to(self.device)

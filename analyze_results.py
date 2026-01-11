@@ -24,10 +24,8 @@ from tqdm import tqdm
 
 from config.dataset_config import DatasetConfig
 from config.model_config import ModelConfig
-from data.data_loader import TrafficDataset  # Using your actual Dataset class
-from data.tokenizer import SimpleTokenizer  # Using your actual Tokenizer
-
-# --- PRODUCTION IMPORTS ---
+from data.data_loader import TrafficDataset
+from data.tokenizer import SimpleTokenizer
 from model.vlm_model import TrafficVLM
 from visualization.cross_attention_viz import overlay_attention_heatmap
 
@@ -80,7 +78,6 @@ class ComprehensiveModelAnalyzer:
 
         run_config_dir = Path("outputs") / self.run_name
 
-        # 1. Try Loading ModelConfig
         model_config_path = run_config_dir / "model_config.py"
         try:
             if model_config_path.exists():
@@ -89,7 +86,7 @@ class ComprehensiveModelAnalyzer:
                     model_config_module = module_from_spec(spec)
                     spec.loader.exec_module(model_config_module)
                     self.model_config = model_config_module.ModelConfig()
-                    print(f"  ✓ Loaded saved ModelConfig from {model_config_path}")
+                    print(f"Loaded saved ModelConfig from {model_config_path}")
                 else:
                     raise ImportError
             else:
@@ -100,7 +97,6 @@ class ComprehensiveModelAnalyzer:
             )
             self.model_config = ModelConfig()
 
-        # 2. Try Loading DatasetConfig
         dataset_config_path = run_config_dir / "dataset_config.py"
         try:
             if dataset_config_path.exists():
@@ -109,7 +105,7 @@ class ComprehensiveModelAnalyzer:
                     dataset_config_module = module_from_spec(spec)
                     spec.loader.exec_module(dataset_config_module)
                     self.dataset_config = dataset_config_module.DatasetConfig()
-                    print(f"  ✓ Loaded saved DatasetConfig from {dataset_config_path}")
+                    print(f"Loaded saved DatasetConfig from {dataset_config_path}")
                 else:
                     raise ImportError
             else:
@@ -122,7 +118,7 @@ class ComprehensiveModelAnalyzer:
 
         self.num_classes = self.model_config.num_classes
         self.id_to_label = {v: k for k, v in self.dataset_config.label_map.items()}
-        print(f"  ✓ Label Map: {self.id_to_label}")
+        print(f"Label Map: {self.id_to_label}")
 
     def _load_model(self):
         print("\n[2/6] Loading Model...")
@@ -132,22 +128,20 @@ class ComprehensiveModelAnalyzer:
 
         checkpoint = torch.load(self.checkpoint_path, map_location=self.device)
 
-        # Create model with loaded config
         self.model = TrafficVLM(self.model_config)
 
-        # Handle different checkpoint formats (full dict vs state_dict only)
         if "model_state_dict" in checkpoint:
             self.model.load_state_dict(checkpoint["model_state_dict"])
             if "epoch" in checkpoint:
-                print(f"  ✓ Loaded checkpoint from Epoch {checkpoint['epoch']}")
+                print(f"Loaded checkpoint from Epoch {checkpoint['epoch']}")
             if "val_acc" in checkpoint:
-                print(f"  ✓ Checkpoint Val Accuracy: {checkpoint['val_acc']:.2f}%")
+                print(f"Checkpoint Val Accuracy: {checkpoint['val_acc']:.2f}%")
         else:
             self.model.load_state_dict(checkpoint)
 
         self.model.to(self.device)
         self.model.eval()
-        print("  ✓ Model loaded and set to evaluation mode")
+        print("Model loaded and set to evaluation mode")
 
     def _load_data(self):
         print("\n[3/6] Loading Data...")
@@ -155,11 +149,10 @@ class ComprehensiveModelAnalyzer:
         if self.custom_dataloader_fn is None:
             raise RuntimeError("Dataloader function is required!")
 
-        # Using batch_size=1 for analysis allows easy per-sample processing
         self.test_loader = self.custom_dataloader_fn(
             self.test_split, batch_size=1, shuffle=False, num_workers=0
         )
-        print(f"  ✓ Loaded {len(self.test_loader)} {self.test_split} samples")
+        print(f"Loaded {len(self.test_loader)} {self.test_split} samples")
 
     def run_inference(self, max_samples=None):
         print("\n[4/6] Running Inference...")
@@ -174,7 +167,6 @@ class ComprehensiveModelAnalyzer:
                 if max_samples and len(self.all_predictions) >= max_samples:
                     break
 
-                # EARLY EXIT for very large datasets if analyzing casually
                 if max_samples and idx > max_samples * 10:
                     break
 
@@ -211,10 +203,10 @@ class ComprehensiveModelAnalyzer:
                 else:
                     self.success_cases.append(case_data)
 
-        print("  ✓ Inference complete")
-        print(f"  ✓ Total Samples: {len(self.all_predictions)}")
-        print(f"  ✓ Failures: {len(self.failure_cases)}")
-        print(f"  ✓ Successes: {len(self.success_cases)}")
+        print("Inference complete")
+        print(f"Total Samples: {len(self.all_predictions)}")
+        print(f"Failures: {len(self.failure_cases)}")
+        print(f"Successes: {len(self.success_cases)}")
 
     def compute_metrics(self) -> Dict:
         print("\n[5/6] Computing Metrics...")
@@ -299,9 +291,9 @@ class ComprehensiveModelAnalyzer:
             },
         }
 
-        print(f"  ✓ Overall Accuracy: {accuracy:.2f}%")
-        print(f"  ✓ Macro F1-Score: {f1_macro:.2f}%")
-        print(f"  ✓ Weighted F1-Score: {f1_weighted:.2f}%")
+        print(f"Overall Accuracy: {accuracy:.2f}%")
+        print(f"Macro F1-Score: {f1_macro:.2f}%")
+        print(f"Weighted F1-Score: {f1_weighted:.2f}%")
 
         return metrics
 
@@ -309,36 +301,36 @@ class ComprehensiveModelAnalyzer:
         print("\n[6/6] Generating Visualizations...")
 
         self._plot_confusion_matrix(metrics["confusion_matrix"], metrics["unique_labels"])
-        print("  ✓ Saved confusion_matrix.png")
+        print("Saved confusion_matrix.png")
 
         self._plot_per_class_metrics(metrics["per_class"], metrics["unique_labels"])
-        print("  ✓ Saved per_class_metrics.png")
+        print("Saved per_class_metrics.png")
 
         self._plot_confusion_matrix_normalized(
             metrics["confusion_matrix"], metrics["unique_labels"]
         )
-        print("  ✓ Saved confusion_matrix_normalized.png")
+        print("Saved confusion_matrix_normalized.png")
 
         self._plot_tp_tn_fp_fn(metrics["per_class"], metrics["unique_labels"])
-        print("  ✓ Saved tp_tn_fp_fn_breakdown.png")
+        print("Saved tp_tn_fp_fn_breakdown.png")
 
         self._plot_confidence_distribution()
-        print("  ✓ Saved confidence_distribution.png")
+        print("Saved confidence_distribution.png")
 
         self._plot_failure_cases()
-        print("  ✓ Saved failure_cases_grid.png")
+        print("Saved failure_cases_grid.png")
 
         self._plot_high_confidence_failures()
-        print("  ✓ Saved high_confidence_failures.png")
+        print("Saved high_confidence_failures.png")
 
         self._plot_class_distribution(metrics["unique_labels"])
-        print("  ✓ Saved class_distribution.png")
+        print("Saved class_distribution.png")
 
         self._plot_attention_failures()
-        print("  ✓ Saved attention_failure_*.png")
+        print("Saved attention_failure_*.png")
 
         self._plot_confidence_vs_accuracy()
-        print("  ✓ Saved confidence_vs_accuracy.png")
+        print("Saved confidence_vs_accuracy.png")
 
     def _plot_confusion_matrix(self, cm: np.ndarray, unique_labels: list):
         fig, ax = plt.subplots(figsize=(10, 8))
@@ -617,7 +609,6 @@ class ComprehensiveModelAnalyzer:
         ax1.grid(axis="y", alpha=0.3)
 
         unique_pred, counts_pred = np.unique(self.all_predictions, return_counts=True)
-        # Ensure x-axis aligns even if some classes weren't predicted
         pred_counts_aligned = []
         for label in unique_true:
             if label in unique_pred:
@@ -663,7 +654,6 @@ class ComprehensiveModelAnalyzer:
         for idx, case in enumerate(samples_to_analyze):
             try:
                 batch_idx = case["idx"]
-                # Access underlying dataset directly
                 batch = self.test_loader.dataset[batch_idx]
                 pixel_values = batch["image"].unsqueeze(0).to(self.device)
                 input_ids = batch["input_ids"].unsqueeze(0).to(self.device)
@@ -737,7 +727,6 @@ class ComprehensiveModelAnalyzer:
         json_path = self.output_dir / "metrics.json"
         unique_labels = [int(x) for x in metrics["unique_labels"]]
 
-        # JSON Dump
         def default(obj):
             if isinstance(obj, np.integer):
                 return int(obj)
@@ -750,7 +739,6 @@ class ComprehensiveModelAnalyzer:
         with open(json_path, "w") as f:
             json.dump(metrics, f, indent=2, default=default)
 
-        # Text Report
         with open(report_path, "w") as f:
             f.write("=" * 80 + "\n")
             f.write("COMPREHENSIVE MODEL ANALYSIS REPORT\n")
@@ -803,14 +791,14 @@ class ComprehensiveModelAnalyzer:
                 f"Incorrect:         {len(self.failure_cases)} ({len(self.failure_cases) / len(self.all_predictions) * 100:.2f}%)\n"
             )
             f.write("=" * 80 + "\n")
-        print(f"  ✓ Saved metrics report to {report_path}")
-        print(f"  ✓ Saved metrics JSON to {json_path}")
+        print(f"Saved metrics report to {report_path}")
+        print(f"Saved metrics JSON to {json_path}")
 
     def run_full_analysis(self):
         print("\n" + "=" * 80)
         print("STARTING FULL ANALYSIS PIPELINE")
         print("=" * 80)
-        self.run_inference(max_samples=1000)  # Analyze 1000 samples for speed/viz
+        self.run_inference(max_samples=1000)
         metrics = self.compute_metrics()
         self.generate_visualizations(metrics)
         self.save_metrics_report(metrics)
@@ -839,17 +827,12 @@ def analyze_model(
 
 
 if __name__ == "__main__":
-    # ==================== CONFIGURATION ====================
-    # UPDATE THIS TO MATCH YOUR LATEST RUN FOLDER NAME
     RUN_NAME = "vlm_run_01"
     CHECKPOINT_PATH = f"checkpoints/{RUN_NAME}/traffic_vlm_best.pt"
     TEST_SPLIT = "test"
 
     print(f"\n🚀 Analyzing Checkpoint: {CHECKPOINT_PATH}")
 
-    # ==================== PRODUCTION DATALOADER SETUP ====================
-    # We define a helper that matches the signature expected by the Analyzer
-    # This uses your PRODUCTION TrafficDataset, not a custom one.
     def get_production_dataloader(split_name, batch_size=1, num_workers=0, shuffle=False):
         dataset = TrafficDataset(split_name)
         return DataLoader(

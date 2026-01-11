@@ -74,7 +74,6 @@ class ComprehensiveModelAnalyzer:
 
         run_config_dir = Path("outputs") / self.run_name
 
-        # Load ModelConfig from saved file
         model_config_path = run_config_dir / "model_config.py"
         if model_config_path.exists():
             spec = spec_from_file_location("model_config", model_config_path)
@@ -87,7 +86,6 @@ class ComprehensiveModelAnalyzer:
         else:
             raise FileNotFoundError(f"ModelConfig not found at {model_config_path}")
 
-        # Load DatasetConfig from saved file
         dataset_config_path = run_config_dir / "dataset_config.py"
         if dataset_config_path.exists():
             spec = spec_from_file_location("dataset_config", dataset_config_path)
@@ -117,7 +115,6 @@ class ComprehensiveModelAnalyzer:
 
         checkpoint = torch.load(self.checkpoint_path, map_location=self.device)
 
-        # Create model with loaded config
         self.model = TrafficVLM(self.model_config)
 
         if "model_state_dict" in checkpoint:
@@ -172,18 +169,15 @@ class ComprehensiveModelAnalyzer:
 
         self.model.eval()
 
-        # Calculate total for progress bar
         total_samples = max_samples if max_samples else len(self.test_loader)
 
         with torch.no_grad():
             for idx, batch in enumerate(
                 tqdm(self.test_loader, desc="  Processing", total=total_samples)
             ):
-                # Stop when we have enough (only if max_samples is set)
                 if max_samples and len(self.all_predictions) >= max_samples:
                     break
 
-                # EARLY EXIT: If we've checked too many samples, stop
                 if max_samples and idx > max_samples * 10:
                     print(f"\n  ⚠ Reached max iteration limit at {idx} samples")
                     break
@@ -876,7 +870,7 @@ class ComprehensiveModelAnalyzer:
             "recall_weighted": float(metrics["recall_weighted"]),
             "f1_weighted": float(metrics["f1_weighted"]),
             "confusion_matrix": metrics["confusion_matrix"].tolist(),
-            "unique_labels": unique_labels,  # Uses the converted Python list
+            "unique_labels": unique_labels,
             "per_class": {
                 "precision": metrics["per_class"]["precision"].tolist(),
                 "recall": metrics["per_class"]["recall"].tolist(),
@@ -935,15 +929,12 @@ def analyze_model(
 if __name__ == "__main__":
     import re
 
-    # ==================== CONFIGURATION ====================
     RUN_NAME = "traffic_vlm_v2_multi_class_1"
     CHECKPOINT_PATH = f"checkpoints/{RUN_NAME}/best_model.pt"
     TEST_SPLIT = "test"
 
-    # ==================== LOAD RUN'S CONFIGS ====================
     run_dir = Path("outputs") / RUN_NAME
 
-    # Load dataset config
     spec = spec_from_file_location("saved_dataset_config", run_dir / "dataset_config.py")
     if spec is None or spec.loader is None:
         raise ImportError("Failed to load dataset config")
@@ -960,7 +951,6 @@ if __name__ == "__main__":
     print(f"   Image Size: {saved_cfg.image_size}")
     print(f"   Num Classes: {saved_cfg.num_classes}\n")
 
-    # ==================== CREATE CUSTOM TOKENIZER ====================
     class CustomTokenizer:
         def __init__(self, vocab_path):
             with open(vocab_path, "r") as f:
@@ -983,22 +973,18 @@ if __name__ == "__main__":
                     ids = ids + [self.vocab.get("[PAD]", 0)] * (max_len - len(ids))
             return ids
 
-    # ==================== CREATE CUSTOM DATASET ====================
     class CustomDataset(Dataset):
         def __init__(self, dataset_dir, split, cfg):
             self.dataset_dir = Path(dataset_dir)
             self.cfg = cfg
             self.split = split
 
-            # Load commands
             cmd_path = self.dataset_dir / f"{split}_commands.json"
             with open(cmd_path, "r") as f:
                 self.commands = json.load(f)
 
-            # Load vocab
             self.tokenizer = CustomTokenizer(self.dataset_dir / "vocab.json")
 
-            # Setup transforms
             if split == "train":
                 self.transform = T.Compose(
                     [
@@ -1049,7 +1035,6 @@ if __name__ == "__main__":
                 "label": torch.tensor(label_id, dtype=torch.long),
             }
 
-    # ==================== CREATE CUSTOM DATALOADER FUNCTION ====================
     def custom_get_dataloader(split_name, batch_size=32, num_workers=4, shuffle=True):
         dataset = CustomDataset(DATASET_DIR, split_name, saved_cfg)
         return DataLoader(
@@ -1060,7 +1045,6 @@ if __name__ == "__main__":
             pin_memory=True,
         )
 
-    # ==================== RUN ANALYSIS ====================
     analyze_model(
         checkpoint_path=CHECKPOINT_PATH,
         run_name=RUN_NAME,

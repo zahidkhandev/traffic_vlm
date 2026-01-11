@@ -13,9 +13,7 @@ class FailureAnalyzer:
         self.dataloader = dataloader
         self.device = device
         self.tokenizer = tokenizer
-        # Dynamically load the labels from config
         self.cfg = DatasetConfig()
-        # Invert the label map: {0: "yes", 2: "stop_red_light", ...}
         self.label_map = {v: k for k, v in self.cfg.label_map.items()}
 
     def find_failures(self, num_samples=5):
@@ -69,13 +67,11 @@ class FailureAnalyzer:
         for i, fail in enumerate(failures):
             plt.subplot(rows, cols, i + 1)
 
-            # Denormalize and CLIP to [0, 1] to remove the imshow warnings
             img = denormalize_image(fail["image"])
             img = np.clip(img, 0, 1)
 
             plt.imshow(img)
 
-            # Use the dynamic label map to prevent KeyError
             true_name = self.label_map.get(fail["true_label"], "unknown")
             pred_name = self.label_map.get(fail["pred_label"], "unknown")
 

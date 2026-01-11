@@ -23,7 +23,7 @@ class TrafficDataset(Dataset):
         self.tokenizer.load_vocab()
         self.split = split_name
 
-        # --- HEAVY PRODUCTION AUGMENTATION (ON-THE-FLY) ---
+        # --- HEAVY PRODUCTION AUGMENTATION ---
         # This creates "new" data every epoch by modifying existing images.
         if self.split == "train":
             self.transform = T.Compose(
@@ -36,7 +36,7 @@ class TrafficDataset(Dataset):
                         ratio=(0.9, 1.1),  # Keep aspect ratio mostly square
                         antialias=True,
                     ),
-                    T.RandomRotation(degrees=(-5, 5)),  # FIX: Use tuple for Pylance
+                    T.RandomRotation(degrees=(-5, 5)),
                     # 2. Photometric: Heavy Color/Lighting (The "Colors" part)
                     T.ColorJitter(
                         brightness=0.5,  # Drastic lighting changes (Shadows/Sun)
@@ -47,7 +47,7 @@ class TrafficDataset(Dataset):
                     T.RandomGrayscale(p=0.1),  # Occasional B&W cam simulation
                     # 3. Quality & Sensor Noise
                     T.RandomAdjustSharpness(sharpness_factor=2, p=0.3),  # Sharp/Blurry
-                    T.RandomAutocontrast(p=0.3),  # Fix exposure
+                    T.RandomAutocontrast(p=0.3),
                     T.RandomApply(
                         [T.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 2.0))], p=0.2
                     ),
@@ -167,7 +167,6 @@ def get_dataloader(split_name, batch_size=32, num_workers=4, shuffle=True):
             replacement=True,  # Allow picking same image multiple times (Augmentation makes it unique)
         )
 
-        # IMPORTANT: Sampler handles the "shuffling".
         shuffle = False
 
     return DataLoader(

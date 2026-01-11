@@ -91,7 +91,6 @@ class Trainer:
         correct = 0
         total = 0
 
-        # For Per-Class Metrics
         all_preds = []
         all_labels = []
 
@@ -119,7 +118,6 @@ class Trainer:
         avg_loss = total_loss / len(self.val_loader)
         accuracy = correct / total
 
-        # --- PER CLASS METRICS ---
         classes = ["Safe", "Red Light", "Pedestrian", "Vehicle", "Obstacle"]
         print(f"\n{'=' * 60}")
         print(f"EPOCH {epoch_index + 1} BREAKDOWN")
@@ -131,7 +129,6 @@ class Trainer:
         all_labels = np.array(all_labels)
 
         for i, class_name in enumerate(classes):
-            # Find indices where this class was the TARGET
             indices = all_labels == i
             class_total = indices.sum()
 
@@ -171,11 +168,9 @@ class Trainer:
             print(f"[SAVED BEST] {val_acc:.2%}")
 
     def load_checkpoint(self, checkpoint_path):
-        # (Same as before)
         pass
 
     def train(self, resume_from=None):
-        # (Same as before - Standard Loop)
         start_epoch = 0
 
         print(f"Starting training on {self.device}...")

@@ -15,7 +15,6 @@ class VLMLoss(nn.Module):
     def __init__(self, device: str = "cuda", label_smoothing: float = 0.1):
         super().__init__()
 
-        # Standard Loss (The Sampler handles the balancing)
         self.classification_loss = nn.CrossEntropyLoss(label_smoothing=label_smoothing)
 
     def forward(self, logits: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
