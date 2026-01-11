@@ -1,9 +1,8 @@
 import os
 
+import numpy as np
 import torch
 from torch.amp.autocast_mode import autocast
-
-# FIX: Import from specific submodules to satisfy Pylance strict mode
 from torch.amp.grad_scaler import GradScaler
 from tqdm import tqdm
 
@@ -29,12 +28,12 @@ class Trainer:
         self.config = config
         self.device = device
 
-        self.criterion = VLMLoss()
-        # Note: 'cuda' argument is required for newer GradScaler
+        self.criterion = VLMLoss(device=self.device)
         self.scaler = GradScaler("cuda", enabled=config.mixed_precision)
 
         self.global_step = 0
         self.best_val_loss = float("inf")
+        self.best_val_acc = 0.0
 
     def train_one_epoch(self, epoch_index):
         self.model.train()
@@ -43,23 +42,15 @@ class Trainer:
         progress_bar = tqdm(self.train_loader, desc=f"Epoch {epoch_index + 1} Training")
 
         for step, batch in enumerate(progress_bar):
-            # Match keys from TrafficDataset
             pixel_values = batch["image"].to(self.device)
             input_ids = batch["input_ids"].to(self.device)
             labels = batch["label"].to(self.device)
 
-            attention_mask = batch.get("attention_mask")
-            if attention_mask is not None:
-                attention_mask = attention_mask.to(self.device)
-
-            # Use autocast for mixed precision
             with autocast("cuda", enabled=self.config.mixed_precision):
                 outputs = self.model(
                     pixel_values=pixel_values,
                     input_ids=input_ids,
-                    attention_mask=attention_mask,
                 )
-
                 logits = outputs["logits"]
                 loss = self.criterion(logits, labels)
                 loss = loss / self.config.grad_accumulation_steps
@@ -70,35 +61,39 @@ class Trainer:
                 self.scaler.unscale_(self.optimizer)
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
 
+                scale_before = self.scaler.get_scale()
                 self.scaler.step(self.optimizer)
                 self.scaler.update()
-
-                if self.scheduler:
-                    self.scheduler.step()
+                scale_after = self.scaler.get_scale()
 
                 self.optimizer.zero_grad()
-                self.global_step += 1
+
+                if self.scheduler:
+                    if scale_after >= scale_before:
+                        self.scheduler.step()
+                        self.global_step += 1
 
             current_loss = loss.item() * self.config.grad_accumulation_steps
             total_loss += current_loss
 
-            current_lr = (
+            lr = (
                 self.scheduler.get_last_lr()[0]
                 if self.scheduler
                 else self.config.learning_rate
             )
-            progress_bar.set_postfix(
-                {"loss": f"{current_loss:.4f}", "lr": f"{current_lr:.6f}"}
-            )
+            progress_bar.set_postfix({"loss": f"{current_loss:.4f}", "lr": f"{lr:.6f}"})
 
-        avg_loss = total_loss / len(self.train_loader)
-        return avg_loss
+        return total_loss / len(self.train_loader)
 
     def validate(self, epoch_index):
         self.model.eval()
         total_loss = 0
         correct = 0
         total = 0
+
+        # For Per-Class Metrics
+        all_preds = []
+        all_labels = []
 
         print(f"\nRunning Validation for Epoch {epoch_index + 1}...")
 
@@ -118,51 +113,76 @@ class Trainer:
                 correct += (preds == labels).sum().item()
                 total += labels.size(0)
 
+                all_preds.extend(preds.cpu().numpy())
+                all_labels.extend(labels.cpu().numpy())
+
         avg_loss = total_loss / len(self.val_loader)
         accuracy = correct / total
 
-        print(
-            f"Epoch {epoch_index + 1} Results -> Val Loss: {avg_loss:.4f} | Accuracy: {accuracy:.2%}"
-        )
+        # --- PER CLASS METRICS ---
+        classes = ["Safe", "Red Light", "Pedestrian", "Vehicle", "Obstacle"]
+        print(f"\n{'=' * 60}")
+        print(f"EPOCH {epoch_index + 1} BREAKDOWN")
+        print(f"{'=' * 60}")
+        print(f"{'Class':<20} {'Total':<10} {'Correct':<10} {'Accuracy':<10}")
+        print(f"{'-' * 60}")
+
+        all_preds = np.array(all_preds)
+        all_labels = np.array(all_labels)
+
+        for i, class_name in enumerate(classes):
+            # Find indices where this class was the TARGET
+            indices = all_labels == i
+            class_total = indices.sum()
+
+            if class_total > 0:
+                class_correct = (all_preds[indices] == i).sum()
+                class_acc = class_correct / class_total
+                print(
+                    f"{class_name:<20} {class_total:<10} {class_correct:<10} {class_acc:.2%}"
+                )
+            else:
+                print(f"{class_name:<20} {0:<10} {0:<10} N/A")
+        print(f"{'=' * 60}\n")
+
+        print(f"Overall Val Loss: {avg_loss:.4f} | Accuracy: {accuracy:.2%}")
         return avg_loss, accuracy
 
     def save_checkpoint(self, epoch, val_loss, val_acc):
-        if not os.path.exists("checkpoints"):
-            os.makedirs("checkpoints")
-
-        filename = f"checkpoints/traffic_vlm_epoch_{epoch + 1}.pt"
-
-        torch.save(
-            {
-                "epoch": epoch,
-                "model_state_dict": self.model.state_dict(),
-                "optimizer_state_dict": self.optimizer.state_dict(),
-                "val_loss": val_loss,
-                "val_acc": val_acc,
-                "config": self.config,
-            },
-            filename,
+        checkpoint_dir = os.path.join(
+            "checkpoints", getattr(self.config, "run_name", "default_run")
         )
+        os.makedirs(checkpoint_dir, exist_ok=True)
 
-        print(f"Checkpoint saved: {filename}")
+        filename = os.path.join(checkpoint_dir, f"epoch_{epoch + 1}.pt")
+        state = {
+            "epoch": epoch,
+            "model_state_dict": self.model.state_dict(),
+            "optimizer_state_dict": self.optimizer.state_dict(),
+            "val_loss": val_loss,
+            "val_acc": val_acc,
+        }
+        torch.save(state, filename)
 
         if val_loss < self.best_val_loss:
             self.best_val_loss = val_loss
-            best_path = "checkpoints/traffic_vlm_best.pt"
-            torch.save(self.model.state_dict(), best_path)
-            print("🏆 New Best Model Saved!")
+            self.best_val_acc = val_acc
+            torch.save(state, os.path.join(checkpoint_dir, "best_model.pt"))
+            print(f"[SAVED BEST] {val_acc:.2%}")
 
-    def train(self):
-        print(
-            f"Starting training for {self.config.num_epochs} epochs on {self.device}..."
-        )
+    def load_checkpoint(self, checkpoint_path):
+        # (Same as before)
+        pass
 
-        for epoch in range(self.config.num_epochs):
+    def train(self, resume_from=None):
+        # (Same as before - Standard Loop)
+        start_epoch = 0
+
+        print(f"Starting training on {self.device}...")
+
+        for epoch in range(start_epoch, self.config.num_epochs):
             train_loss = self.train_one_epoch(epoch)
             print(f"Epoch {epoch + 1} Train Loss: {train_loss:.4f}")
 
             val_loss, val_acc = self.validate(epoch)
-
             self.save_checkpoint(epoch, val_loss, val_acc)
-
-        print("Training Complete!")

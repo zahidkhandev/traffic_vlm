@@ -1,0 +1,70 @@
+2026-01-10 12:32:14 [INFO] Dataset Config: {'root_dir': 'data\\raw', 'output_dir': 'data\\processed', 'images_dir_name': 'images', 'labels_dir_name': 'labels', 'image_size': 224, 'max_seq_len': 32, 'mean': [0.485, 0.456, 0.406], 'std': [0.229, 0.224, 0.225], 'allowed_weather': ['clear', 'partly cloudy', 'overcast', 'rainy', 'snowy', 'foggy', 'undefined'], 'allowed_time': ['daytime', 'night', 'dawn/dusk', 'undefined'], 'label_map': {'yes': 0, 'safe': 0, 'no': 1, 'stop_red_light': 2, 'stop_pedestrian': 3, 'stop_vehicle': 4, 'stop_obstacle': 5}, 'num_classes': 6}
+2026-01-10 12:32:14 [INFO] Experiment: traffic_vlm_v5_run_1
+2026-01-10 12:32:14 [INFO] Device: cuda
+2026-01-10 12:32:14 [INFO] Batch Size: 64
+2026-01-10 12:32:15 [INFO] Loading Data...
+2026-01-10 12:32:15 [INFO] Vocab Size: 12
+2026-01-10 12:32:15 [INFO] Train Batches: 1094 | Val Batches: 157
+2026-01-10 12:32:15 [INFO] Initializing Model...
+2026-01-10 12:32:17 [INFO] Trainable Parameters: 68.21M
+2026-01-10 12:32:17 [INFO] Starting Training...
+2026-01-10 12:40:49 [INFO] Epoch 1/15 | Train Loss: 0.8487 | Val Loss: 0.8366 | Val Acc: 63.52%
+2026-01-10 12:41:44 [INFO] Visualizations saved to outputs\traffic_vlm_v5_run_1/visualizations/epoch_1
+2026-01-10 12:42:43 [INFO] Training interrupted.
+2026-01-10 12:42:43 [INFO] Done.
+2026-01-10 12:42:54 [INFO] Dataset Config: {'root_dir': 'data\\raw', 'output_dir': 'data\\processed', 'images_dir_name': 'images', 'labels_dir_name': 'labels', 'image_size': 224, 'max_seq_len': 32, 'mean': [0.485, 0.456, 0.406], 'std': [0.229, 0.224, 0.225], 'allowed_weather': ['clear', 'partly cloudy', 'overcast', 'rainy', 'snowy', 'foggy', 'undefined'], 'allowed_time': ['daytime', 'night', 'dawn/dusk', 'undefined'], 'label_map': {'yes': 0, 'safe': 0, 'no': 1, 'stop_red_light': 2, 'stop_pedestrian': 3, 'stop_vehicle': 4, 'stop_obstacle': 5}, 'num_classes': 6}
+2026-01-10 12:42:54 [INFO] Experiment: traffic_vlm_v5_run_1
+2026-01-10 12:42:54 [INFO] Device: cuda
+2026-01-10 12:42:54 [INFO] Batch Size: 64
+2026-01-10 12:42:55 [INFO] Loading Data...
+2026-01-10 12:42:55 [INFO] Vocab Size: 12
+2026-01-10 12:42:55 [INFO] Train Batches: 1094 | Val Batches: 157
+2026-01-10 12:42:55 [INFO] Initializing Model...
+2026-01-10 12:42:57 [INFO] Trainable Parameters: 68.21M
+2026-01-10 12:42:57 [INFO] Starting Training...
+2026-01-10 12:43:40 [INFO] Training interrupted.
+2026-01-10 12:43:40 [INFO] Done.
+2026-01-10 12:44:28 [INFO] Dataset Config: {'root_dir': 'data\\raw', 'output_dir': 'data\\processed', 'images_dir_name': 'images', 'labels_dir_name': 'labels', 'image_size': 224, 'max_seq_len': 32, 'mean': [0.485, 0.456, 0.406], 'std': [0.229, 0.224, 0.225], 'allowed_weather': ['clear', 'partly cloudy', 'overcast', 'rainy', 'snowy', 'foggy', 'undefined'], 'allowed_time': ['daytime', 'night', 'dawn/dusk', 'undefined'], 'label_map': {'yes': 0, 'safe': 0, 'no': 1, 'stop_red_light': 2, 'stop_pedestrian': 3, 'stop_vehicle': 4, 'stop_obstacle': 5}, 'num_classes': 6}
+2026-01-10 12:44:28 [INFO] Experiment: traffic_vlm_v5_run_1
+2026-01-10 12:44:28 [INFO] Device: cuda
+2026-01-10 12:44:28 [INFO] Batch Size: 64
+2026-01-10 12:44:29 [INFO] Loading Data...
+2026-01-10 12:44:29 [INFO] Vocab Size: 12
+2026-01-10 12:44:29 [INFO] Train Batches: 1094 | Val Batches: 157
+2026-01-10 12:44:29 [INFO] Initializing Model...
+2026-01-10 12:44:31 [INFO] Trainable Parameters: 68.21M
+2026-01-10 12:44:31 [INFO] Starting Training...
+2026-01-10 12:45:20 [INFO] Training interrupted.
+2026-01-10 12:45:20 [INFO] Done.
+2026-01-10 12:46:50 [INFO] Dataset Config: {'root_dir': 'data\\raw', 'output_dir': 'data\\processed', 'images_dir_name': 'images', 'labels_dir_name': 'labels', 'image_size': 224, 'max_seq_len': 32, 'mean': [0.485, 0.456, 0.406], 'std': [0.229, 0.224, 0.225], 'allowed_weather': ['clear', 'partly cloudy', 'overcast', 'rainy', 'snowy', 'foggy', 'undefined'], 'allowed_time': ['daytime', 'night', 'dawn/dusk', 'undefined'], 'label_map': {'yes': 0, 'safe': 0, 'no': 1, 'stop_red_light': 2, 'stop_pedestrian': 3, 'stop_vehicle': 4, 'stop_obstacle': 5}, 'num_classes': 6}
+2026-01-10 12:46:50 [INFO] Experiment: traffic_vlm_v5_run_1
+2026-01-10 12:46:50 [INFO] Device: cuda
+2026-01-10 12:46:50 [INFO] Batch Size: 64
+2026-01-10 12:46:51 [INFO] Loading Data...
+2026-01-10 12:46:51 [INFO] Vocab Size: 12
+2026-01-10 12:46:51 [INFO] Train Batches: 1094 | Val Batches: 157
+2026-01-10 12:46:51 [INFO] Initializing Model...
+2026-01-10 12:46:53 [INFO] Trainable Parameters: 68.21M
+2026-01-10 12:46:53 [INFO] Starting Training...
+2026-01-10 12:47:23 [INFO] Training interrupted.
+2026-01-10 12:47:23 [INFO] Done.
+2026-01-10 12:49:46 [INFO] Dataset Config: {'root_dir': 'data\\raw', 'output_dir': 'data\\processed', 'images_dir_name': 'images', 'labels_dir_name': 'labels', 'image_size': 224, 'max_seq_len': 32, 'mean': [0.485, 0.456, 0.406], 'std': [0.229, 0.224, 0.225], 'allowed_weather': ['clear', 'partly cloudy', 'overcast', 'rainy', 'snowy', 'foggy', 'undefined'], 'allowed_time': ['daytime', 'night', 'dawn/dusk', 'undefined'], 'label_map': {'yes': 0, 'safe': 0, 'no': 1, 'stop_red_light': 2, 'stop_pedestrian': 3, 'stop_vehicle': 4, 'stop_obstacle': 5}, 'num_classes': 6}
+2026-01-10 12:49:46 [INFO] Experiment: traffic_vlm_v5_run_1
+2026-01-10 12:49:46 [INFO] Device: cuda
+2026-01-10 12:49:46 [INFO] Batch Size: 64
+2026-01-10 12:49:47 [INFO] Loading Data...
+2026-01-10 12:49:47 [INFO] Vocab Size: 12
+2026-01-10 12:49:47 [INFO] Train Batches: 1094 | Val Batches: 157
+2026-01-10 12:49:47 [INFO] Initializing Model...
+2026-01-10 12:49:49 [INFO] Trainable Parameters: 68.21M
+2026-01-10 12:49:49 [INFO] Starting Training...
+2026-01-10 12:58:36 [INFO] Epoch 1/20 | Train Loss: 0.8501 | Val Loss: 0.8403 | Val Acc: 63.52%
+2026-01-10 12:59:30 [INFO] Visualizations saved to outputs\traffic_vlm_v5_run_1/visualizations/epoch_1
+2026-01-10 13:08:57 [INFO] Epoch 2/20 | Train Loss: 0.8308 | Val Loss: 0.8113 | Val Acc: 63.52%
+2026-01-10 13:09:51 [INFO] Visualizations saved to outputs\traffic_vlm_v5_run_1/visualizations/epoch_2
+2026-01-10 13:19:05 [INFO] Epoch 3/20 | Train Loss: 0.8312 | Val Loss: 0.8299 | Val Acc: 63.52%
+2026-01-10 13:19:54 [INFO] Visualizations saved to outputs\traffic_vlm_v5_run_1/visualizations/epoch_3
+2026-01-10 13:29:05 [INFO] Epoch 4/20 | Train Loss: 0.8294 | Val Loss: 0.8215 | Val Acc: 63.52%
+2026-01-10 13:29:55 [INFO] Visualizations saved to outputs\traffic_vlm_v5_run_1/visualizations/epoch_4
+2026-01-10 13:30:37 [INFO] Training interrupted.
+2026-01-10 13:30:37 [INFO] Done.

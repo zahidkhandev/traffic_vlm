@@ -1,0 +1,505 @@
+(.venv) PS C:\Users\nkz3kor\Documents\traffic_vlm> python main.py --experiment_name "traffic_vlm_v6_run_1" --batch_size 64 --epochs 50 --checkpoint "checkpoints/traffic_vlm_v6_run_1/checkpoint_epoch_25.pt"
+2026-01-10 20:19:33 [INFO] Dataset Config: {'root_dir': 'data\\raw', 'output_dir': 'data\\processed', 'images_dir_name': 'images', 'labels_dir_name': 'labels', 'image_size': 224, 'max_seq_len': 32, 'mean': [0.485, 0.456, 0.406], 'std': [0.229, 0.224, 0.225], 'allowed_weather': ['clear', 'partly cloudy', 'overcast', 'rainy', 'snowy', 'foggy', 'undefined'], 'allowed_time': ['daytime', 'night', 'dawn/dusk', 'undefined'], 'label_map': {'safe': 0, 'stop_red_light': 1, 'stop_pedestrian': 2, 'stop_vehicle': 3, 'stop_obstacle': 4}, 'num_classes': 5}
+2026-01-10 20:19:33 [INFO] Experiment: traffic_vlm_v6_run_1
+2026-01-10 20:19:33 [INFO] Device: cuda
+2026-01-10 20:19:33 [INFO] Batch Size: 64
+2026-01-10 20:19:34 [INFO] Loading Data...
+Loaded vocabulary (13 tokens)
+2026-01-10 20:19:34 [INFO] Vocab Size: 13
+Loaded vocabulary (13 tokens)
+Loaded 70000 Safety commands from train (Filtered out 0 aux items)
+[INFO] Computing class weights for Balanced Sampling...
+[INFO] Class Counts: [8239, 10557, 6067, 44269, 868]
+[INFO] Class Weights: [0.00012137395242461935, 9.472388046560809e-05, 0.00016482610953971744, 2.2589170839637518e-05, 0.0011520737316459417]
+Loaded vocabulary (13 tokens)
+Loaded 10000 Safety commands from val (Filtered out 0 aux items)
+2026-01-10 20:19:34 [INFO] Train Batches: 1094 | Val Batches: 157
+2026-01-10 20:19:34 [INFO] Initializing Model...
+2026-01-10 20:19:36 [INFO] Trainable Parameters: 68.21M
+Loading checkpoint from checkpoints/traffic_vlm_v6_run_1/checkpoint_epoch_25.pt...
+2026-01-10 20:19:36 [INFO] Resumed from epoch 25
+2026-01-10 20:19:36 [INFO] Starting Training...
+Epoch 26 Training: 100%|█████████████████████████████████████████████████████████████████████████| 1094/1094 [06:11<00:00,  2.95it/s, loss=1.1332, lr=0.000126] 
+
+Running Validation for Epoch 26...
+Validating: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████| 157/157 [03:14<00:00,  1.24s/it] 
+
+============================================================
+EPOCH 26 BREAKDOWN
+============================================================
+Class                Total      Correct    Accuracy
+------------------------------------------------------------
+Safe                 1106       775        70.07%
+Red Light            1511       737        48.78%
+Pedestrian           898        525        58.46%
+Vehicle              6352       2054       32.34%
+Obstacle             133        65         48.87%
+============================================================
+
+Overall Val Loss: 1.3470 | Accuracy: 41.56%
+2026-01-10 20:29:02 [INFO] Epoch 26/50 | Train Loss: 1.1458 | Val Loss: 1.3470 | Val Acc: 41.56%
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.006274509709328413..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.00784313678741455..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.0..1.0000000059604646].
+2026-01-10 20:29:43 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1/visualizations/epoch_26
+Epoch 27 Training: 100%|█████████████████████████████████████████████████████████████████████████| 1094/1094 [06:14<00:00,  2.92it/s, loss=1.1168, lr=0.000116] 
+
+Running Validation for Epoch 27...
+Validating: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████| 157/157 [03:12<00:00,  1.23s/it] 
+
+============================================================
+EPOCH 27 BREAKDOWN
+============================================================
+Class                Total      Correct    Accuracy
+------------------------------------------------------------
+Safe                 1106       738        66.73%
+Red Light            1511       706        46.72%
+Pedestrian           898        573        63.81%
+Vehicle              6352       2687       42.30%
+Obstacle             133        48         36.09%
+============================================================
+
+Overall Val Loss: 1.2582 | Accuracy: 47.52%
+2026-01-10 20:39:10 [INFO] Epoch 27/50 | Train Loss: 1.1291 | Val Loss: 1.2582 | Val Acc: 47.52%
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.006274509709328413..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.00784313678741455..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.0..1.0000000059604646].
+2026-01-10 20:39:53 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1/visualizations/epoch_27
+Epoch 28 Training: 100%|█████████████████████████████████████████████████████████████████████████| 1094/1094 [06:18<00:00,  2.89it/s, loss=1.2910, lr=0.000107] 
+
+Running Validation for Epoch 28...
+Validating: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████| 157/157 [03:17<00:00,  1.26s/it] 
+
+============================================================
+EPOCH 28 BREAKDOWN
+============================================================
+Class                Total      Correct    Accuracy
+------------------------------------------------------------
+Safe                 1106       811        73.33%
+Red Light            1511       782        51.75%
+Pedestrian           898        552        61.47%
+Vehicle              6352       1894       29.82%
+Obstacle             133        64         48.12%
+============================================================
+
+Overall Val Loss: 1.3627 | Accuracy: 41.03%
+2026-01-10 20:49:28 [INFO] Epoch 28/50 | Train Loss: 1.1152 | Val Loss: 1.3627 | Val Acc: 41.03%
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.006274509709328413..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.00784313678741455..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.0..1.0000000059604646].
+2026-01-10 20:50:08 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1/visualizations/epoch_28
+Epoch 29 Training: 100%|█████████████████████████████████████████████████████████████████████████| 1094/1094 [06:14<00:00,  2.92it/s, loss=1.1671, lr=0.000098] 
+
+Running Validation for Epoch 29...
+Validating: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████| 157/157 [03:12<00:00,  1.23s/it] 
+
+============================================================
+EPOCH 29 BREAKDOWN
+============================================================
+Class                Total      Correct    Accuracy
+------------------------------------------------------------
+Safe                 1106       817        73.87%
+Red Light            1511       789        52.22%
+Pedestrian           898        515        57.35%
+Vehicle              6352       2344       36.90%
+Obstacle             133        54         40.60%
+============================================================
+
+Overall Val Loss: 1.3122 | Accuracy: 45.19%
+2026-01-10 20:59:36 [INFO] Epoch 29/50 | Train Loss: 1.1001 | Val Loss: 1.3122 | Val Acc: 45.19%
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.006274509709328413..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.00784313678741455..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.0..1.0000000059604646].
+2026-01-10 21:00:15 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1/visualizations/epoch_29
+Epoch 30 Training: 100%|█████████████████████████████████████████████████████████████████████████| 1094/1094 [06:13<00:00,  2.93it/s, loss=1.0123, lr=0.000089] 
+
+Running Validation for Epoch 30...
+Validating: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████| 157/157 [03:12<00:00,  1.23s/it] 
+
+============================================================
+EPOCH 30 BREAKDOWN
+============================================================
+Class                Total      Correct    Accuracy
+------------------------------------------------------------
+Safe                 1106       763        68.99%
+Red Light            1511       811        53.67%
+Pedestrian           898        536        59.69%
+Vehicle              6352       2175       34.24%
+Obstacle             133        62         46.62%
+============================================================
+
+Overall Val Loss: 1.3467 | Accuracy: 43.47%
+2026-01-10 21:09:41 [INFO] Epoch 30/50 | Train Loss: 1.0817 | Val Loss: 1.3467 | Val Acc: 43.47%
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.006274509709328413..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.00784313678741455..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.0..1.0000000059604646].
+2026-01-10 21:10:24 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1/visualizations/epoch_30
+Epoch 31 Training: 100%|█████████████████████████████████████████████████████████████████████████| 1094/1094 [06:11<00:00,  2.95it/s, loss=1.0530, lr=0.000080] 
+
+Running Validation for Epoch 31...
+Validating: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████| 157/157 [03:12<00:00,  1.23s/it] 
+
+============================================================
+EPOCH 31 BREAKDOWN
+============================================================
+Class                Total      Correct    Accuracy
+------------------------------------------------------------
+Safe                 1106       804        72.69%
+Red Light            1511       777        51.42%
+Pedestrian           898        586        65.26%
+Vehicle              6352       2218       34.92%
+Obstacle             133        51         38.35%
+============================================================
+
+Overall Val Loss: 1.3229 | Accuracy: 44.36%
+2026-01-10 21:19:48 [INFO] Epoch 31/50 | Train Loss: 1.0718 | Val Loss: 1.3229 | Val Acc: 44.36%
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.006274509709328413..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.010980391874909401..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.0..1.0000000059604646].
+2026-01-10 21:20:27 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1/visualizations/epoch_31
+Epoch 32 Training: 100%|█████████████████████████████████████████████████████████████████████████| 1094/1094 [06:10<00:00,  2.95it/s, loss=1.1718, lr=0.000072] 
+
+Running Validation for Epoch 32...
+Validating: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████| 157/157 [03:16<00:00,  1.25s/it] 
+
+============================================================
+EPOCH 32 BREAKDOWN
+============================================================
+Class                Total      Correct    Accuracy
+------------------------------------------------------------
+Safe                 1106       749        67.72%
+Red Light            1511       854        56.52%
+Pedestrian           898        553        61.58%
+Vehicle              6352       2256       35.52%
+Obstacle             133        57         42.86%
+============================================================
+
+Overall Val Loss: 1.3182 | Accuracy: 44.69%
+2026-01-10 21:29:55 [INFO] Epoch 32/50 | Train Loss: 1.0633 | Val Loss: 1.3182 | Val Acc: 44.69%
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.006274509709328413..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.00784313678741455..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.0..1.0000000059604646].
+2026-01-10 21:30:35 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1/visualizations/epoch_32
+Epoch 33 Training: 100%|█████████████████████████████████████████████████████████████████████████| 1094/1094 [06:14<00:00,  2.92it/s, loss=0.9514, lr=0.000064] 
+
+Running Validation for Epoch 33...
+Validating: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████| 157/157 [03:13<00:00,  1.24s/it] 
+
+============================================================
+EPOCH 33 BREAKDOWN
+============================================================
+Class                Total      Correct    Accuracy
+------------------------------------------------------------
+Safe                 1106       803        72.60%
+Red Light            1511       870        57.58%
+Pedestrian           898        507        56.46%
+Vehicle              6352       2507       39.47%
+Obstacle             133        42         31.58%
+============================================================
+
+Overall Val Loss: 1.2784 | Accuracy: 47.29%
+2026-01-10 21:40:03 [INFO] Epoch 33/50 | Train Loss: 1.0613 | Val Loss: 1.2784 | Val Acc: 47.29%
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.006274509709328413..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.00784313678741455..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.0..1.0000000059604646].
+2026-01-10 21:40:43 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1/visualizations/epoch_33
+Epoch 34 Training: 100%|█████████████████████████████████████████████████████████████████████████| 1094/1094 [06:15<00:00,  2.92it/s, loss=1.0829, lr=0.000056] 
+
+Running Validation for Epoch 34...
+Validating: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████| 157/157 [03:13<00:00,  1.23s/it] 
+
+============================================================
+EPOCH 34 BREAKDOWN
+============================================================
+Class                Total      Correct    Accuracy
+------------------------------------------------------------
+Safe                 1106       779        70.43%
+Red Light            1511       850        56.25%
+Pedestrian           898        503        56.01%
+Vehicle              6352       2671       42.05%
+Obstacle             133        47         35.34%
+============================================================
+
+Overall Val Loss: 1.2908 | Accuracy: 48.50%
+2026-01-10 21:50:12 [INFO] Epoch 34/50 | Train Loss: 1.0451 | Val Loss: 1.2908 | Val Acc: 48.50%
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.006274509709328413..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.00784313678741455..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.0..1.0000000059604646].
+2026-01-10 21:50:53 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1/visualizations/epoch_34
+Epoch 35 Training: 100%|█████████████████████████████████████████████████████████████████████████| 1094/1094 [06:23<00:00,  2.85it/s, loss=0.9967, lr=0.000049] 
+
+Running Validation for Epoch 35...
+Validating: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████| 157/157 [03:17<00:00,  1.26s/it] 
+
+============================================================
+EPOCH 35 BREAKDOWN
+============================================================
+Class                Total      Correct    Accuracy
+------------------------------------------------------------
+Safe                 1106       799        72.24%
+Red Light            1511       853        56.45%
+Pedestrian           898        535        59.58%
+Vehicle              6352       2717       42.77%
+Obstacle             133        35         26.32%
+============================================================
+
+Overall Val Loss: 1.2514 | Accuracy: 49.39%
+2026-01-10 22:00:34 [INFO] Epoch 35/50 | Train Loss: 1.0390 | Val Loss: 1.2514 | Val Acc: 49.39%
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.006274509709328413..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.00784313678741455..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.0..1.0000000059604646].
+2026-01-10 22:01:15 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1/visualizations/epoch_35
+Epoch 36 Training: 100%|█████████████████████████████████████████████████████████████████████████| 1094/1094 [06:26<00:00,  2.83it/s, loss=1.0598, lr=0.000042] 
+
+Running Validation for Epoch 36...
+Validating: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████| 157/157 [03:13<00:00,  1.23s/it] 
+
+============================================================
+EPOCH 36 BREAKDOWN
+============================================================
+Class                Total      Correct    Accuracy
+------------------------------------------------------------
+Safe                 1106       787        71.16%
+Red Light            1511       811        53.67%
+Pedestrian           898        564        62.81%
+Vehicle              6352       2655       41.80%
+Obstacle             133        34         25.56%
+============================================================
+
+Overall Val Loss: 1.2509 | Accuracy: 48.51%
+2026-01-10 22:10:56 [INFO] Epoch 36/50 | Train Loss: 1.0244 | Val Loss: 1.2509 | Val Acc: 48.51%
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.006274509709328413..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.00784313678741455..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.0..1.0000000059604646].
+2026-01-10 22:11:41 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1/visualizations/epoch_36
+Epoch 37 Training: 100%|█████████████████████████████████████████████████████████████████████████| 1094/1094 [06:27<00:00,  2.82it/s, loss=1.0513, lr=0.000036] 
+
+Running Validation for Epoch 37...
+Validating: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████| 157/157 [03:16<00:00,  1.25s/it] 
+
+============================================================
+EPOCH 37 BREAKDOWN
+============================================================
+Class                Total      Correct    Accuracy
+------------------------------------------------------------
+Safe                 1106       813        73.51%
+Red Light            1511       861        56.98%
+Pedestrian           898        528        58.80%
+Vehicle              6352       2621       41.26%
+Obstacle             133        50         37.59%
+============================================================
+
+Overall Val Loss: 1.2691 | Accuracy: 48.73%
+2026-01-10 22:21:26 [INFO] Epoch 37/50 | Train Loss: 1.0114 | Val Loss: 1.2691 | Val Acc: 48.73%
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.006274509709328413..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.00784313678741455..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.0..1.0000000059604646].
+2026-01-10 22:22:08 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1/visualizations/epoch_37
+Epoch 38 Training: 100%|█████████████████████████████████████████████████████████████████████████| 1094/1094 [06:27<00:00,  2.82it/s, loss=0.8949, lr=0.000030] 
+
+Running Validation for Epoch 38...
+Validating: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████| 157/157 [03:14<00:00,  1.24s/it] 
+
+============================================================
+EPOCH 38 BREAKDOWN
+============================================================
+Class                Total      Correct    Accuracy
+------------------------------------------------------------
+Safe                 1106       844        76.31%
+Red Light            1511       801        53.01%
+Pedestrian           898        571        63.59%
+Vehicle              6352       2530       39.83%
+Obstacle             133        40         30.08%
+============================================================
+
+Overall Val Loss: 1.2756 | Accuracy: 47.86%
+2026-01-10 22:31:50 [INFO] Epoch 38/50 | Train Loss: 1.0046 | Val Loss: 1.2756 | Val Acc: 47.86%
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.006274509709328413..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.00784313678741455..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.0..1.0000000059604646].
+2026-01-10 22:32:31 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1/visualizations/epoch_38
+Epoch 39 Training: 100%|█████████████████████████████████████████████████████████████████████████| 1094/1094 [06:29<00:00,  2.81it/s, loss=0.8645, lr=0.000024] 
+
+Running Validation for Epoch 39...
+Validating: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████| 157/157 [03:15<00:00,  1.24s/it] 
+
+============================================================
+EPOCH 39 BREAKDOWN
+============================================================
+Class                Total      Correct    Accuracy
+------------------------------------------------------------
+Safe                 1106       815        73.69%
+Red Light            1511       823        54.47%
+Pedestrian           898        512        57.02%
+Vehicle              6352       3080       48.49%
+Obstacle             133        39         29.32%
+============================================================
+
+Overall Val Loss: 1.2135 | Accuracy: 52.69%
+2026-01-10 22:42:15 [INFO] Epoch 39/50 | Train Loss: 0.9976 | Val Loss: 1.2135 | Val Acc: 52.69%
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.006274509709328413..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.00784313678741455..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.0..1.0000000059604646].
+2026-01-10 22:42:56 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1/visualizations/epoch_39
+Epoch 40 Training: 100%|█████████████████████████████████████████████████████████████████████████| 1094/1094 [06:29<00:00,  2.81it/s, loss=0.8998, lr=0.000019] 
+
+Running Validation for Epoch 40...
+Validating: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████| 157/157 [03:14<00:00,  1.24s/it] 
+
+============================================================
+EPOCH 40 BREAKDOWN
+============================================================
+Class                Total      Correct    Accuracy
+------------------------------------------------------------
+Safe                 1106       817        73.87%
+Red Light            1511       829        54.86%
+Pedestrian           898        536        59.69%
+Vehicle              6352       2855       44.95%
+Obstacle             133        33         24.81%
+============================================================
+
+Overall Val Loss: 1.2315 | Accuracy: 50.70%
+2026-01-10 22:52:40 [INFO] Epoch 40/50 | Train Loss: 0.9964 | Val Loss: 1.2315 | Val Acc: 50.70%
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.006274509709328413..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.00784313678741455..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.0..1.0000000059604646].
+2026-01-10 22:53:21 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1/visualizations/epoch_40
+Epoch 41 Training: 100%|█████████████████████████████████████████████████████████████████████████| 1094/1094 [06:29<00:00,  2.81it/s, loss=0.9826, lr=0.000015] 
+
+Running Validation for Epoch 41...
+Validating: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████| 157/157 [03:18<00:00,  1.26s/it] 
+
+============================================================
+EPOCH 41 BREAKDOWN
+============================================================
+Class                Total      Correct    Accuracy
+------------------------------------------------------------
+Safe                 1106       826        74.68%
+Red Light            1511       892        59.03%
+Pedestrian           898        510        56.79%
+Vehicle              6352       2720       42.82%
+Obstacle             133        29         21.80%
+============================================================
+
+Overall Val Loss: 1.2456 | Accuracy: 49.77%
+2026-01-10 23:03:09 [INFO] Epoch 41/50 | Train Loss: 0.9864 | Val Loss: 1.2456 | Val Acc: 49.77%
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.006274509709328413..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.00784313678741455..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.0..1.0000000059604646].
+2026-01-10 23:03:50 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1/visualizations/epoch_41
+Epoch 42 Training: 100%|█████████████████████████████████████████████████████████████████████████| 1094/1094 [06:29<00:00,  2.81it/s, loss=1.0146, lr=0.000011] 
+
+Running Validation for Epoch 42...
+Validating: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████| 157/157 [03:15<00:00,  1.24s/it] 
+
+============================================================
+EPOCH 42 BREAKDOWN
+============================================================
+Class                Total      Correct    Accuracy
+------------------------------------------------------------
+Safe                 1106       827        74.77%
+Red Light            1511       835        55.26%
+Pedestrian           898        541        60.24%
+Vehicle              6352       2911       45.83%
+Obstacle             133        33         24.81%
+============================================================
+
+Overall Val Loss: 1.2364 | Accuracy: 51.47%
+2026-01-10 23:13:34 [INFO] Epoch 42/50 | Train Loss: 0.9804 | Val Loss: 1.2364 | Val Acc: 51.47%
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.006274509709328413..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.00784313678741455..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.0..1.0000000059604646].
+2026-01-10 23:14:18 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1/visualizations/epoch_42
+Epoch 43 Training: 100%|█████████████████████████████████████████████████████████████████████████| 1094/1094 [06:30<00:00,  2.81it/s, loss=0.9210, lr=0.000008] 
+
+Running Validation for Epoch 43...
+Validating: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████| 157/157 [03:14<00:00,  1.24s/it] 
+
+============================================================
+EPOCH 43 BREAKDOWN
+============================================================
+Class                Total      Correct    Accuracy
+------------------------------------------------------------
+Safe                 1106       827        74.77%
+Red Light            1511       824        54.53%
+Pedestrian           898        554        61.69%
+Vehicle              6352       2860       45.03%
+Obstacle             133        31         23.31%
+============================================================
+
+Overall Val Loss: 1.2387 | Accuracy: 50.96%
+2026-01-10 23:24:02 [INFO] Epoch 43/50 | Train Loss: 0.9725 | Val Loss: 1.2387 | Val Acc: 50.96%
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.006274509709328413..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.00784313678741455..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.0..1.0000000059604646].
+2026-01-10 23:24:43 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1/visualizations/epoch_43
+Epoch 44 Training: 100%|█████████████████████████████████████████████████████████████████████████| 1094/1094 [06:29<00:00,  2.81it/s, loss=0.9892, lr=0.000005] 
+
+Running Validation for Epoch 44...
+Validating: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████| 157/157 [03:15<00:00,  1.25s/it] 
+
+============================================================
+EPOCH 44 BREAKDOWN
+============================================================
+Class                Total      Correct    Accuracy
+------------------------------------------------------------
+Safe                 1106       837        75.68%
+Red Light            1511       839        55.53%
+Pedestrian           898        535        59.58%
+Vehicle              6352       2876       45.28%
+Obstacle             133        31         23.31%
+============================================================
+
+Overall Val Loss: 1.2412 | Accuracy: 51.18%
+2026-01-10 23:34:28 [INFO] Epoch 44/50 | Train Loss: 0.9758 | Val Loss: 1.2412 | Val Acc: 51.18%
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.006274509709328413..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.00784313678741455..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.0..1.0000000059604646].
+2026-01-10 23:35:09 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1/visualizations/epoch_44
+Epoch 45 Training: 100%|█████████████████████████████████████████████████████████████████████████| 1094/1094 [06:30<00:00,  2.80it/s, loss=0.9727, lr=0.000003] 
+
+Running Validation for Epoch 45...
+Validating: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████| 157/157 [03:22<00:00,  1.29s/it] 
+
+============================================================
+EPOCH 45 BREAKDOWN
+============================================================
+Class                Total      Correct    Accuracy
+------------------------------------------------------------
+Safe                 1106       822        74.32%
+Red Light            1511       862        57.05%
+Pedestrian           898        535        59.58%
+Vehicle              6352       2909       45.80%
+Obstacle             133        32         24.06%
+============================================================
+
+Overall Val Loss: 1.2307 | Accuracy: 51.60%
+2026-01-10 23:45:02 [INFO] Epoch 45/50 | Train Loss: 0.9700 | Val Loss: 1.2307 | Val Acc: 51.60%
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.006274509709328413..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.00784313678741455..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.0..1.0000000059604646].
+2026-01-10 23:45:47 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1/visualizations/epoch_45
+Epoch 46 Training: 100%|█████████████████████████████████████████████████████████████████████████| 1094/1094 [06:31<00:00,  2.79it/s, loss=0.9751, lr=0.000001] 
+
+Running Validation for Epoch 46...
+Validating: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████| 157/157 [03:17<00:00,  1.26s/it] 
+
+============================================================
+EPOCH 46 BREAKDOWN
+============================================================
+Class                Total      Correct    Accuracy
+------------------------------------------------------------
+Safe                 1106       825        74.59%
+Red Light            1511       851        56.32%
+Pedestrian           898        529        58.91%
+Vehicle              6352       2933       46.17%
+Obstacle             133        31         23.31%
+============================================================
+
+Overall Val Loss: 1.2295 | Accuracy: 51.69%
+2026-01-10 23:55:36 [INFO] Epoch 46/50 | Train Loss: 0.9685 | Val Loss: 1.2295 | Val Acc: 51.69%
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.006274509709328413..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.00784313678741455..1.0000000059604646].
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers). Got range [0.0..1.0000000059604646].
+2026-01-10 23:56:22 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1/visualizations/epoch_46
+Epoch 47 Training:   2%|█▊  

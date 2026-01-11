@@ -33,20 +33,20 @@ class DatasetConfig:
         default_factory=lambda: ["daytime", "night", "dawn/dusk", "undefined"]
     )
 
-    # --- PRODUCTION LABEL MAP ---
-    # 0 = Safe/Yes
-    # 1 = Generic No
-    # 2-5 = Specific Stop Reasons
+    # --- UPDATED LABEL MAP (NO "NO") ---
+    # 0 = Safe
+    # 1 = Stop Red Light
+    # 2 = Stop Pedestrian
+    # 3 = Stop Vehicle
+    # 4 = Stop Obstacle
     label_map: Dict[str, int] = field(
         default_factory=lambda: {
-            "yes": 0,
             "safe": 0,
-            "no": 1,
-            "stop_red_light": 2,
-            "stop_pedestrian": 3,
-            "stop_vehicle": 4,
-            "stop_obstacle": 5,
+            "stop_red_light": 1,
+            "stop_pedestrian": 2,
+            "stop_vehicle": 3,
+            "stop_obstacle": 4,
         }
     )
 
-    num_classes: int = 6
+    num_classes: int = 5
