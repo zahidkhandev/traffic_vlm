@@ -23,13 +23,10 @@ class TrafficDataset(Dataset):
         self.tokenizer.load_vocab()
         self.split = split_name
 
-        # --- HEAVY PRODUCTION AUGMENTATION ---
-        # This creates "new" data every epoch by modifying existing images.
         if self.split == "train":
             self.transform = T.Compose(
                 [
                     # 1. Geometry: Zoom & Rotate (No Skew)
-                    # Simulates different distances and camera vibrations
                     T.RandomResizedCrop(
                         size=(self.cfg.image_size, self.cfg.image_size),
                         scale=(0.85, 1.0),  # Zoom in slightly (15% max)
@@ -55,7 +52,7 @@ class TrafficDataset(Dataset):
                     T.ToImage(),
                     T.ToDtype(torch.float32, scale=True),
                     T.Normalize(mean=self.cfg.mean, std=self.cfg.std),
-                    # 5. Regularization: Cutout (Crucial for small datasets)
+                    # 5. Regularization: Cutout
                     # Forces model to look at "road" if "car" is blocked by a black box
                     T.RandomErasing(p=0.2, scale=(0.02, 0.15), ratio=(0.3, 3.3)),
                 ]
@@ -81,13 +78,11 @@ class TrafficDataset(Dataset):
         if not os.path.exists(self.h5_path):
             raise FileNotFoundError(f"H5 file not found: {self.h5_path}")
 
-        # --- FILTERING & LABEL PRE-CALCULATION ---
         with open(self.cmd_path, "r") as f:
             all_cmds = json.load(f)
 
         self.commands = [c for c in all_cmds if c.get("type") == "safety"]
 
-        # Pre-calculate labels for WeightedRandomSampler
         self.labels_indices: List[int] = []
         for cmd in self.commands:
             a_text = cmd["a"].lower().strip()
@@ -140,9 +135,6 @@ def get_dataloader(split_name, batch_size=32, num_workers=4, shuffle=True):
 
     sampler = None
 
-    # --- BALANCED DATA LOADING LOGIC ---
-    # This is what "Increases" the minority classes.
-    # It will pick "Stop" images way more often than "Safe" images.
     if split_name == "train":
         print("[INFO] Computing class weights for Balanced Sampling...")
 
@@ -162,9 +154,9 @@ def get_dataloader(split_name, batch_size=32, num_workers=4, shuffle=True):
         print(f"[INFO] Class Weights: {class_weights.tolist()}")
 
         sampler = WeightedRandomSampler(
-            weights=sample_weights.tolist(),  # Convert to Python list
-            num_samples=len(sample_weights),  # Total size stays same (Epoch size)
-            replacement=True,  # Allow picking same image multiple times (Augmentation makes it unique)
+            weights=sample_weights.tolist(),
+            num_samples=len(sample_weights),
+            replacement=True,
         )
 
         shuffle = False
@@ -180,7 +172,6 @@ def get_dataloader(split_name, batch_size=32, num_workers=4, shuffle=True):
 
 
 if __name__ == "__main__":
-    # Sanity check
     loader = get_dataloader("train", batch_size=10)
     print("Testing DataLoader for 'train' with WeightedSampler & Augmentation...")
 

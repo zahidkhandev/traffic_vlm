@@ -47,7 +47,6 @@ def verify_dataloader_balance():
 
     ideal_pct = 100 / len(id_to_name)
     print(f"Ideal Balanced Percentage: ~{ideal_pct:.2f}% per class")
-    print("If your values are close to this (e.g., 10-20%), the balancer is working.\n")
 
 
 if __name__ == "__main__":

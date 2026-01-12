@@ -82,7 +82,7 @@ class ComprehensiveModelAnalyzer:
             model_config_module = module_from_spec(spec)
             spec.loader.exec_module(model_config_module)
             self.model_config = model_config_module.ModelConfig()
-            print(f"  ✓ Loaded ModelConfig from {model_config_path}")
+            print(f"Loaded ModelConfig from {model_config_path}")
         else:
             raise FileNotFoundError(f"ModelConfig not found at {model_config_path}")
 
@@ -94,18 +94,18 @@ class ComprehensiveModelAnalyzer:
             dataset_config_module = module_from_spec(spec)
             spec.loader.exec_module(dataset_config_module)
             self.dataset_config = dataset_config_module.DatasetConfig()
-            print(f"  ✓ Loaded DatasetConfig from {dataset_config_path}")
+            print(f"Loaded DatasetConfig from {dataset_config_path}")
         else:
             raise FileNotFoundError(f"DatasetConfig not found at {dataset_config_path}")
 
         self.num_classes = self.model_config.num_classes
-        print(f"  ✓ Number of Classes: {self.num_classes}")
-        print(f"  ✓ Image Size: {self.model_config.image_size}")
-        print(f"  ✓ Patch Size: {self.model_config.patch_size}")
-        print(f"  ✓ Vocab Size: {self.model_config.vocab_size}")
+        print(f"Number of Classes: {self.num_classes}")
+        print(f"Image Size: {self.model_config.image_size}")
+        print(f"Patch Size: {self.model_config.patch_size}")
+        print(f"Vocab Size: {self.model_config.vocab_size}")
 
         self.id_to_label = {v: k for k, v in self.dataset_config.label_map.items()}
-        print(f"  ✓ Label Map: {self.id_to_label}")
+        print(f"Label Map: {self.id_to_label}")
 
     def _load_model(self):
         print("\n[2/6] Loading Model...")
@@ -120,15 +120,15 @@ class ComprehensiveModelAnalyzer:
         if "model_state_dict" in checkpoint:
             self.model.load_state_dict(checkpoint["model_state_dict"])
             if "epoch" in checkpoint:
-                print(f"  ✓ Loaded checkpoint from Epoch {checkpoint['epoch']}")
+                print(f"Loaded checkpoint from Epoch {checkpoint['epoch']}")
             if "val_acc" in checkpoint:
-                print(f"  ✓ Checkpoint Val Accuracy: {checkpoint['val_acc']:.2f}%")
+                print(f"Checkpoint Val Accuracy: {checkpoint['val_acc']:.2f}%")
         else:
             self.model.load_state_dict(checkpoint)
 
         self.model.to(self.device)
         self.model.eval()
-        print("  ✓ Model loaded and set to evaluation mode")
+        print("Model loaded and set to evaluation mode")
 
     def _load_data(self):
         print("\n[3/6] Loading Data...")
@@ -139,7 +139,7 @@ class ComprehensiveModelAnalyzer:
         self.test_loader = self.custom_dataloader_fn(
             self.test_split, batch_size=1, shuffle=False, num_workers=0
         )
-        print(f"  ✓ Loaded {len(self.test_loader)} {self.test_split} samples")
+        print(f"Loaded {len(self.test_loader)} {self.test_split} samples")
 
         self.metadata = self._load_metadata()
 
@@ -161,7 +161,7 @@ class ComprehensiveModelAnalyzer:
                         json_str = str(raw_data)
                     metadata.append(json.loads(json_str))
 
-        print(f"  ✓ Loaded metadata for {len(metadata)} samples")
+        print(f"Loaded metadata for {len(metadata)} samples")
         return metadata
 
     def run_inference(self, max_samples=None):
@@ -218,10 +218,10 @@ class ComprehensiveModelAnalyzer:
                 else:
                     self.success_cases.append(case_data)
 
-        print("  ✓ Inference complete")
-        print(f"  ✓ Total Samples: {len(self.all_predictions)}")
-        print(f"  ✓ Failures: {len(self.failure_cases)}")
-        print(f"  ✓ Successes: {len(self.success_cases)}")
+        print("Inference complete")
+        print(f"Total Samples: {len(self.all_predictions)}")
+        print(f"Failures: {len(self.failure_cases)}")
+        print(f"Successes: {len(self.success_cases)}")
 
     def compute_metrics(self) -> Dict:
         print("\n[5/6] Computing Metrics...")
@@ -305,10 +305,10 @@ class ComprehensiveModelAnalyzer:
             },
         }
 
-        print(f"  ✓ Overall Accuracy: {accuracy:.2f}%")
-        print(f"  ✓ Macro F1-Score: {f1_macro:.2f}%")
-        print(f"  ✓ Weighted F1-Score: {f1_weighted:.2f}%")
-        print(f"  ✓ Classes present in test set: {unique_labels}")
+        print(f"Overall Accuracy: {accuracy:.2f}%")
+        print(f"Macro F1-Score: {f1_macro:.2f}%")
+        print(f"Weighted F1-Score: {f1_weighted:.2f}%")
+        print(f"Classes present in test set: {unique_labels}")
 
         return metrics
 
@@ -316,36 +316,36 @@ class ComprehensiveModelAnalyzer:
         print("\n[6/6] Generating Visualizations...")
 
         self._plot_confusion_matrix(metrics["confusion_matrix"], metrics["unique_labels"])
-        print("  ✓ Saved confusion_matrix.png")
+        print("Saved confusion_matrix.png")
 
         self._plot_per_class_metrics(metrics["per_class"], metrics["unique_labels"])
-        print("  ✓ Saved per_class_metrics.png")
+        print("Saved per_class_metrics.png")
 
         self._plot_confusion_matrix_normalized(
             metrics["confusion_matrix"], metrics["unique_labels"]
         )
-        print("  ✓ Saved confusion_matrix_normalized.png")
+        print("Saved confusion_matrix_normalized.png")
 
         self._plot_tp_tn_fp_fn(metrics["per_class"], metrics["unique_labels"])
-        print("  ✓ Saved tp_tn_fp_fn_breakdown.png")
+        print("Saved tp_tn_fp_fn_breakdown.png")
 
         self._plot_confidence_distribution()
-        print("  ✓ Saved confidence_distribution.png")
+        print("Saved confidence_distribution.png")
 
         self._plot_failure_cases()
-        print("  ✓ Saved failure_cases_grid.png")
+        print("Saved failure_cases_grid.png")
 
         self._plot_high_confidence_failures()
-        print("  ✓ Saved high_confidence_failures.png")
+        print("Saved high_confidence_failures.png")
 
         self._plot_class_distribution(metrics["unique_labels"])
-        print("  ✓ Saved class_distribution.png")
+        print("Saved class_distribution.png")
 
         self._plot_attention_failures()
-        print("  ✓ Saved attention_failure_*.png")
+        print("Saved attention_failure_*.png")
 
         self._plot_confidence_vs_accuracy()
-        print("  ✓ Saved confidence_vs_accuracy.png")
+        print("Saved confidence_vs_accuracy.png")
 
     def _plot_confusion_matrix(self, cm: np.ndarray, unique_labels: list):
         fig, ax = plt.subplots(figsize=(10, 8))
@@ -859,7 +859,7 @@ class ComprehensiveModelAnalyzer:
             )
             f.write("=" * 80 + "\n")
 
-        print(f"  ✓ Saved metrics report to {report_path}")
+        print(f"Saved metrics report to {report_path}")
 
         json_metrics = {
             "accuracy": float(metrics["accuracy"]),
@@ -889,7 +889,7 @@ class ComprehensiveModelAnalyzer:
         with open(json_path, "w") as f:
             json.dump(json_metrics, f, indent=2)
 
-        print(f"  ✓ Saved metrics JSON to {json_path}")
+        print(f"Saved metrics JSON to {json_path}")
 
     def run_full_analysis(self):
         print("\n" + "=" * 80)

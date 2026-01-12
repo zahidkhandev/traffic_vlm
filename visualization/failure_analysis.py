@@ -59,7 +59,7 @@ class FailureAnalyzer:
             print("No failures found!")
             return
 
-        cols = min(3, n)  # Reduced columns for better readability of long labels
+        cols = min(3, n)
         rows = (n + cols - 1) // cols
 
         plt.figure(figsize=(5 * cols, 5 * rows))

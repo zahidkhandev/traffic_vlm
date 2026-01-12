@@ -1,3 +1,4 @@
+import logging
 import os
 
 import numpy as np
@@ -7,6 +8,8 @@ from torch.amp.grad_scaler import GradScaler
 from tqdm import tqdm
 
 from training.loss_functions import VLMLoss
+
+logger = logging.getLogger("TrafficVLM")
 
 
 class Trainer:
@@ -94,7 +97,7 @@ class Trainer:
         all_preds = []
         all_labels = []
 
-        print(f"\nRunning Validation for Epoch {epoch_index + 1}...")
+        logger.info(f"\nRunning Validation for Epoch {epoch_index + 1}...")
 
         with torch.no_grad():
             for batch in tqdm(self.val_loader, desc="Validating"):
@@ -118,12 +121,13 @@ class Trainer:
         avg_loss = total_loss / len(self.val_loader)
         accuracy = correct / total
 
+        # --- UPDATED: Uses logger instead of print ---
         classes = ["Safe", "Red Light", "Pedestrian", "Vehicle", "Obstacle"]
-        print(f"\n{'=' * 60}")
-        print(f"EPOCH {epoch_index + 1} BREAKDOWN")
-        print(f"{'=' * 60}")
-        print(f"{'Class':<20} {'Total':<10} {'Correct':<10} {'Accuracy':<10}")
-        print(f"{'-' * 60}")
+        logger.info(f"\n{'=' * 60}")
+        logger.info(f"EPOCH {epoch_index + 1} BREAKDOWN")
+        logger.info(f"{'=' * 60}")
+        logger.info(f"{'Class':<20} {'Total':<10} {'Correct':<10} {'Accuracy':<10}")
+        logger.info(f"{'-' * 60}")
 
         all_preds = np.array(all_preds)
         all_labels = np.array(all_labels)
@@ -135,14 +139,14 @@ class Trainer:
             if class_total > 0:
                 class_correct = (all_preds[indices] == i).sum()
                 class_acc = class_correct / class_total
-                print(
+                logger.info(
                     f"{class_name:<20} {class_total:<10} {class_correct:<10} {class_acc:.2%}"
                 )
             else:
-                print(f"{class_name:<20} {0:<10} {0:<10} N/A")
-        print(f"{'=' * 60}\n")
+                logger.info(f"{class_name:<20} {0:<10} {0:<10} N/A")
+        logger.info(f"{'=' * 60}\n")
 
-        print(f"Overall Val Loss: {avg_loss:.4f} | Accuracy: {accuracy:.2%}")
+        logger.info(f"Overall Val Loss: {avg_loss:.4f} | Accuracy: {accuracy:.2%}")
         return avg_loss, accuracy
 
     def save_checkpoint(self, epoch, val_loss, val_acc):
@@ -165,7 +169,7 @@ class Trainer:
             self.best_val_loss = val_loss
             self.best_val_acc = val_acc
             torch.save(state, os.path.join(checkpoint_dir, "best_model.pt"))
-            print(f"[SAVED BEST] {val_acc:.2%}")
+            logger.info(f"[SAVED BEST] {val_acc:.2%}")
 
     def load_checkpoint(self, checkpoint_path):
         pass
@@ -173,11 +177,11 @@ class Trainer:
     def train(self, resume_from=None):
         start_epoch = 0
 
-        print(f"Starting training on {self.device}...")
+        logger.info(f"Starting training on {self.device}...")
 
         for epoch in range(start_epoch, self.config.num_epochs):
             train_loss = self.train_one_epoch(epoch)
-            print(f"Epoch {epoch + 1} Train Loss: {train_loss:.4f}")
+            logger.info(f"Epoch {epoch + 1} Train Loss: {train_loss:.4f}")
 
             val_loss, val_acc = self.validate(epoch)
             self.save_checkpoint(epoch, val_loss, val_acc)

@@ -1,0 +1,120 @@
+2026-01-11 19:13:44 [INFO] Dataset Config: {'root_dir': 'data\\raw', 'output_dir': 'data\\processed', 'images_dir_name': 'images', 'labels_dir_name': 'labels', 'image_size': 224, 'max_seq_len': 32, 'mean': [0.485, 0.456, 0.406], 'std': [0.229, 0.224, 0.225], 'allowed_weather': ['clear', 'partly cloudy', 'overcast', 'rainy', 'snowy', 'foggy', 'undefined'], 'allowed_time': ['daytime', 'night', 'dawn/dusk', 'undefined'], 'label_map': {'safe': 0, 'stop_red_light': 1, 'stop_pedestrian': 2, 'stop_vehicle': 3, 'stop_obstacle': 4}, 'num_classes': 5}
+2026-01-11 19:13:44 [INFO] Experiment: traffic_vlm_v6_run_1_polish
+2026-01-11 19:13:44 [INFO] Device: cuda
+2026-01-11 19:13:44 [INFO] Batch Size: 64
+2026-01-11 19:13:44 [INFO] Learning Rate: 1e-06
+2026-01-11 19:13:45 [INFO] Loading Data...
+2026-01-11 19:13:45 [INFO] Vocab Size: 13
+2026-01-11 19:13:45 [INFO] Train Batches: 1094 | Val Batches: 157
+2026-01-11 19:13:45 [INFO] Initializing Model...
+2026-01-11 19:13:46 [INFO] Trainable Parameters: 68.21M
+2026-01-11 19:13:46 [INFO] Loading weights for FINE-TUNING from: checkpoints/traffic_vlm_v6_run_1_finetune/best_model.pt
+2026-01-11 19:13:47 [INFO] Weights loaded. Optimizer and Scheduler reset. Starting fresh from Epoch 1.
+2026-01-11 19:13:47 [INFO] Starting Training...
+2026-01-11 19:14:32 [INFO] Training interrupted.
+2026-01-11 19:14:32 [INFO] Done.
+2026-01-11 19:15:09 [INFO] Dataset Config: {'root_dir': 'data\\raw', 'output_dir': 'data\\processed', 'images_dir_name': 'images', 'labels_dir_name': 'labels', 'image_size': 224, 'max_seq_len': 32, 'mean': [0.485, 0.456, 0.406], 'std': [0.229, 0.224, 0.225], 'allowed_weather': ['clear', 'partly cloudy', 'overcast', 'rainy', 'snowy', 'foggy', 'undefined'], 'allowed_time': ['daytime', 'night', 'dawn/dusk', 'undefined'], 'label_map': {'safe': 0, 'stop_red_light': 1, 'stop_pedestrian': 2, 'stop_vehicle': 3, 'stop_obstacle': 4}, 'num_classes': 5}
+2026-01-11 19:15:09 [INFO] Experiment: traffic_vlm_v6_run_1_polish
+2026-01-11 19:15:09 [INFO] Device: cuda
+2026-01-11 19:15:09 [INFO] Batch Size: 64
+2026-01-11 19:15:09 [INFO] Learning Rate: 1e-06
+2026-01-11 19:15:10 [INFO] Loading Data...
+2026-01-11 19:15:10 [INFO] Vocab Size: 13
+2026-01-11 19:15:10 [INFO] Train Batches: 1094 | Val Batches: 157
+2026-01-11 19:15:10 [INFO] Initializing Model...
+2026-01-11 19:15:12 [INFO] Trainable Parameters: 68.21M
+2026-01-11 19:15:12 [INFO] Loading weights for FINE-TUNING from: checkpoints/traffic_vlm_v6_run_1_finetune/best_model.pt
+2026-01-11 19:15:12 [INFO] Weights loaded. Optimizer and Scheduler reset. Starting fresh from Epoch 1.
+2026-01-11 19:15:12 [INFO] Starting Training...
+2026-01-11 20:11:17 [INFO] 
+Running Validation for Epoch 1...
+2026-01-11 20:12:38 [INFO] 
+============================================================
+2026-01-11 20:12:38 [INFO] EPOCH 1 BREAKDOWN
+2026-01-11 20:12:38 [INFO] ============================================================
+2026-01-11 20:12:38 [INFO] Class                Total      Correct    Accuracy  
+2026-01-11 20:12:38 [INFO] ------------------------------------------------------------
+2026-01-11 20:12:38 [INFO] Safe                 1106       828        74.86%
+2026-01-11 20:12:38 [INFO] Red Light            1511       838        55.46%
+2026-01-11 20:12:38 [INFO] Pedestrian           898        520        57.91%
+2026-01-11 20:12:38 [INFO] Vehicle              6352       2911       45.83%
+2026-01-11 20:12:38 [INFO] Obstacle             133        28         21.05%
+2026-01-11 20:12:38 [INFO] ============================================================
+
+2026-01-11 20:12:38 [INFO] Overall Val Loss: 1.2382 | Accuracy: 51.25%
+2026-01-11 20:12:38 [INFO] Epoch 1/10 | Train Loss: 0.9575 | Val Loss: 1.2382 | Val Acc: 51.25%
+2026-01-11 20:13:16 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1_polish/visualizations/epoch_1
+2026-01-11 21:14:39 [INFO] 
+Running Validation for Epoch 2...
+2026-01-11 21:18:55 [INFO] 
+============================================================
+2026-01-11 21:18:55 [INFO] EPOCH 2 BREAKDOWN
+2026-01-11 21:18:55 [INFO] ============================================================
+2026-01-11 21:18:55 [INFO] Class                Total      Correct    Accuracy  
+2026-01-11 21:18:55 [INFO] ------------------------------------------------------------
+2026-01-11 21:18:55 [INFO] Safe                 1106       827        74.77%
+2026-01-11 21:18:55 [INFO] Red Light            1511       838        55.46%
+2026-01-11 21:18:55 [INFO] Pedestrian           898        518        57.68%
+2026-01-11 21:18:55 [INFO] Vehicle              6352       2883       45.39%
+2026-01-11 21:18:55 [INFO] Obstacle             133        29         21.80%
+2026-01-11 21:18:55 [INFO] ============================================================
+
+2026-01-11 21:18:55 [INFO] Overall Val Loss: 1.2419 | Accuracy: 50.95%
+2026-01-11 21:18:55 [INFO] Epoch 2/10 | Train Loss: 0.9446 | Val Loss: 1.2419 | Val Acc: 50.95%
+2026-01-11 21:19:32 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1_polish/visualizations/epoch_2
+2026-01-11 22:18:05 [INFO] 
+Running Validation for Epoch 3...
+2026-01-11 22:22:16 [INFO] 
+============================================================
+2026-01-11 22:22:16 [INFO] EPOCH 3 BREAKDOWN
+2026-01-11 22:22:16 [INFO] ============================================================
+2026-01-11 22:22:16 [INFO] Class                Total      Correct    Accuracy  
+2026-01-11 22:22:16 [INFO] ------------------------------------------------------------
+2026-01-11 22:22:16 [INFO] Safe                 1106       819        74.05%
+2026-01-11 22:22:16 [INFO] Red Light            1511       835        55.26%
+2026-01-11 22:22:16 [INFO] Pedestrian           898        534        59.47%
+2026-01-11 22:22:16 [INFO] Vehicle              6352       2850       44.87%
+2026-01-11 22:22:16 [INFO] Obstacle             133        27         20.30%
+2026-01-11 22:22:16 [INFO] ============================================================
+
+2026-01-11 22:22:16 [INFO] Overall Val Loss: 1.2455 | Accuracy: 50.65%
+2026-01-11 22:22:16 [INFO] Epoch 3/10 | Train Loss: 0.9443 | Val Loss: 1.2455 | Val Acc: 50.65%
+2026-01-11 22:22:53 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1_polish/visualizations/epoch_3
+2026-01-11 23:21:48 [INFO] 
+Running Validation for Epoch 4...
+2026-01-11 23:25:58 [INFO] 
+============================================================
+2026-01-11 23:25:58 [INFO] EPOCH 4 BREAKDOWN
+2026-01-11 23:25:58 [INFO] ============================================================
+2026-01-11 23:25:58 [INFO] Class                Total      Correct    Accuracy  
+2026-01-11 23:25:58 [INFO] ------------------------------------------------------------
+2026-01-11 23:25:58 [INFO] Safe                 1106       823        74.41%
+2026-01-11 23:25:58 [INFO] Red Light            1511       852        56.39%
+2026-01-11 23:25:58 [INFO] Pedestrian           898        512        57.02%
+2026-01-11 23:25:58 [INFO] Vehicle              6352       2910       45.81%
+2026-01-11 23:25:58 [INFO] Obstacle             133        26         19.55%
+2026-01-11 23:25:58 [INFO] ============================================================
+
+2026-01-11 23:25:58 [INFO] Overall Val Loss: 1.2395 | Accuracy: 51.23%
+2026-01-11 23:25:58 [INFO] Epoch 4/10 | Train Loss: 0.9415 | Val Loss: 1.2395 | Val Acc: 51.23%
+2026-01-11 23:26:35 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1_polish/visualizations/epoch_4
+2026-01-12 00:25:41 [INFO] 
+Running Validation for Epoch 5...
+2026-01-12 00:30:01 [INFO] 
+============================================================
+2026-01-12 00:30:01 [INFO] EPOCH 5 BREAKDOWN
+2026-01-12 00:30:01 [INFO] ============================================================
+2026-01-12 00:30:01 [INFO] Class                Total      Correct    Accuracy  
+2026-01-12 00:30:01 [INFO] ------------------------------------------------------------
+2026-01-12 00:30:01 [INFO] Safe                 1106       813        73.51%
+2026-01-12 00:30:01 [INFO] Red Light            1511       855        56.59%
+2026-01-12 00:30:01 [INFO] Pedestrian           898        509        56.68%
+2026-01-12 00:30:01 [INFO] Vehicle              6352       2951       46.46%
+2026-01-12 00:30:01 [INFO] Obstacle             133        26         19.55%
+2026-01-12 00:30:01 [INFO] ============================================================
+
+2026-01-12 00:30:01 [INFO] Overall Val Loss: 1.2363 | Accuracy: 51.54%
+2026-01-12 00:30:01 [INFO] Epoch 5/10 | Train Loss: 0.9326 | Val Loss: 1.2363 | Val Acc: 51.54%
+2026-01-12 00:30:46 [INFO] Visualizations saved to outputs\traffic_vlm_v6_run_1_polish/visualizations/epoch_5
+2026-01-12 00:38:06 [INFO] Training interrupted.
+2026-01-12 00:38:06 [INFO] Done.

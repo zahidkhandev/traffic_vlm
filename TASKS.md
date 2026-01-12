@@ -1316,7 +1316,7 @@ Your project will be considered successful if:
 
 ---
 
-## 🚀 Next Steps After Project
+## Next Steps After Project
 
 1. **Write a blog post** documenting your journey
 2. **Open-source the code** on GitHub

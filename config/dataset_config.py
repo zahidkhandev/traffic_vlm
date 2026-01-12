@@ -33,7 +33,6 @@ class DatasetConfig:
         default_factory=lambda: ["daytime", "night", "dawn/dusk", "undefined"]
     )
 
-    # --- UPDATED LABEL MAP (NO "NO") ---
     # 0 = Safe
     # 1 = Stop Red Light
     # 2 = Stop Pedestrian

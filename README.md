@@ -202,7 +202,7 @@ traffic_vlm/
 
 ---
 
-## 🚀 Usage
+## Usage
 
 **To Train:**
 

@@ -17,7 +17,6 @@ class SimpleTokenizer:
         self.vocab = {}
         self.inverse_vocab = {}
 
-        # Essential special tokens only
         self.specials = ["[PAD]", "[SOS]", "[EOS]", "[UNK]"]
         self.pad_token_id = 0
         self.sos_token_id = 1
@@ -48,23 +47,18 @@ class SimpleTokenizer:
             print(f"  - Scanning {len(commands)} commands in {file_name}...")
 
             for item in commands:
-                # Add words from Question
                 q_words = self._clean_and_split(item["q"])
                 unique_words.update(q_words)
 
-                # Add words from Answer
                 a_words = self._clean_and_split(item["a"])
                 unique_words.update(a_words)
 
-        # Sort for deterministic ordering
         sorted_words = sorted(list(unique_words))
 
-        # Assign IDs starting after special tokens
         self.vocab = {
             word: idx + len(self.specials) for idx, word in enumerate(sorted_words)
         }
 
-        # Add special tokens
         for idx, token in enumerate(self.specials):
             self.vocab[token] = idx
 
@@ -103,7 +97,7 @@ class SimpleTokenizer:
             if isinstance(idx, list):
                 idx = idx[0]
             if hasattr(idx, "item"):
-                idx = idx.item()  # Handle Tensor inputs
+                idx = idx.item()
 
             if idx == self.pad_token_id:
                 continue
@@ -136,8 +130,6 @@ class SimpleTokenizer:
 if __name__ == "__main__":
     tokenizer = SimpleTokenizer()
 
-    # CRITICAL: Include ALL splits so the test set doesn't have [UNK] words
-    # that were only present in validation/test but not train.
     tokenizer.build_vocabulary(
         ["train_commands.json", "val_commands.json", "test_commands.json"]
     )

@@ -827,11 +827,11 @@ def analyze_model(
 
 
 if __name__ == "__main__":
-    RUN_NAME = "vlm_run_01"
-    CHECKPOINT_PATH = f"checkpoints/{RUN_NAME}/traffic_vlm_best.pt"
+    RUN_NAME = "traffic_vlm_run_1"
+    CHECKPOINT_PATH = f"checkpoints/{RUN_NAME}/best_model.pt"
     TEST_SPLIT = "test"
 
-    print(f"\n🚀 Analyzing Checkpoint: {CHECKPOINT_PATH}")
+    print(f"\nAnalyzing Checkpoint: {CHECKPOINT_PATH}")
 
     def get_production_dataloader(split_name, batch_size=1, num_workers=0, shuffle=False):
         dataset = TrafficDataset(split_name)

@@ -22,9 +22,6 @@ from visualization.failure_analysis import FailureAnalyzer
 
 
 def set_seed(seed):
-    """
-    Sets the random seed for reproducibility.
-    """
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -35,35 +32,33 @@ def set_seed(seed):
 
 
 def parse_args():
-    """
-    Parses command-line arguments.
-    """
     parser = argparse.ArgumentParser(description="Traffic VLM Training Pipeline")
     parser.add_argument(
         "--experiment_name", type=str, default="vlm_run_01", help="Name for logging"
     )
     parser.add_argument("--eval_only", action="store_true", help="Run validation only")
-    parser.add_argument("--checkpoint", type=str, default=None, help="Path to checkpoint")
-
-    # --- UPDATED DEFAULT: 4 -> 64 ---
-    # Batch size of 4 is too small for Transformers; use 32 or 64 for stability.
+    parser.add_argument(
+        "--checkpoint", type=str, default=None, help="Path to checkpoint to resume"
+    )
+    parser.add_argument(
+        "--weights",
+        type=str,
+        default=None,
+        help="Path to best model weights for fine-tuning",
+    )
     parser.add_argument("--batch_size", type=int, default=64, help="Batch size")
     parser.add_argument("--epochs", type=int, default=15, help="Num epochs")
+    parser.add_argument("--lr", type=float, default=None, help="Override Learning Rate")
     return parser.parse_args()
 
 
 def visualize_epoch(model, val_loader, tokenizer, device, epoch, output_dir):
-    """
-    Generates attention heatmaps and failure analysis.
-    """
     viz_dir = output_dir / "visualizations" / f"epoch_{epoch + 1}"
     viz_dir.mkdir(parents=True, exist_ok=True)
 
     model.eval()
 
-    # 1. Attention Heatmaps
     try:
-        # Get a fresh batch for visualization
         batch = next(iter(val_loader))
         pixel_values = batch["image"].to(device)
         input_ids = batch["input_ids"].to(device)
@@ -75,8 +70,6 @@ def visualize_epoch(model, val_loader, tokenizer, device, epoch, output_dir):
 
             if attn_maps is not None:
                 for i in range(num_samples):
-                    # Take the last token's attention (usually [EOS] or final answer token)
-                    # Shape: [Batch, Text_Seq, H, W] -> [H, W]
                     heatmap = attn_maps[i, -1, :, :]
                     save_path = viz_dir / f"attention_sample_{i}.png"
                     overlay_attention_heatmap(
@@ -86,12 +79,9 @@ def visualize_epoch(model, val_loader, tokenizer, device, epoch, output_dir):
                         save_path=str(save_path),
                     )
     except Exception as e:
-        print(f"Visualization Warning: Could not generate heatmaps. {e}")
+        print(f"Visualization Warning: {e}")
 
-    # 2. Failure Analysis
     try:
-        # Re-using the same loader might be tricky if it's exhausted,
-        # but FailureAnalyzer usually creates its own iterator or handles it.
         analyzer = FailureAnalyzer(model, val_loader, device, tokenizer)
         failures = analyzer.find_failures(num_samples=9)
 
@@ -99,7 +89,7 @@ def visualize_epoch(model, val_loader, tokenizer, device, epoch, output_dir):
             save_path = viz_dir / "failures.png"
             analyzer.visualize_failures(failures, save_path=str(save_path))
     except Exception as e:
-        print(f"Visualization Warning: Could not run failure analysis. {e}")
+        print(f"Visualization Warning: {e}")
 
 
 def main():
@@ -109,9 +99,11 @@ def main():
     t_config = TrainingConfig()
     d_config = DatasetConfig()
 
-    # Override config with args
     t_config.batch_size = args.batch_size
     t_config.num_epochs = args.epochs
+
+    if args.lr:
+        t_config.learning_rate = args.lr
 
     output_dir = Path(t_config.output_dir) / args.experiment_name
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -122,7 +114,8 @@ def main():
     logger.info(f"Dataset Config: {d_config.__dict__}")
     logger.info(f"Experiment: {args.experiment_name}")
     logger.info(f"Device: {t_config.device}")
-    logger.info(f"Batch Size: {t_config.batch_size}")  # Verify this in logs!
+    logger.info(f"Batch Size: {t_config.batch_size}")
+    logger.info(f"Learning Rate: {t_config.learning_rate}")
 
     set_seed(42)
 
@@ -159,7 +152,6 @@ def main():
         model, learning_rate=t_config.learning_rate, weight_decay=t_config.weight_decay
     )
 
-    # Calculate Total Steps for Scheduler
     total_steps = (
         len(train_loader) * t_config.num_epochs // t_config.grad_accumulation_steps
     )
@@ -170,9 +162,19 @@ def main():
     ckpt_manager = CheckpointManager(checkpoint_dir=checkpoint_dir)
 
     start_epoch = 0
+
     if args.checkpoint:
         start_epoch, _ = ckpt_manager.load(args.checkpoint, model, optimizer, scheduler)
         logger.info(f"Resumed from epoch {start_epoch}")
+
+    elif args.weights:
+        logger.info(f"Loading weights for FINE-TUNING from: {args.weights}")
+        checkpoint = torch.load(args.weights, map_location=t_config.device)
+        model.load_state_dict(checkpoint["model_state_dict"])
+        start_epoch = 0
+        logger.info(
+            "Weights loaded. Optimizer and Scheduler reset. Starting fresh from Epoch 1."
+        )
 
     trainer = Trainer(
         model=model,
@@ -219,7 +221,6 @@ def main():
                 is_best=is_best,
             )
 
-            # Visualization
             plot_training_curves(history, save_dir=output_dir)
             visualize_epoch(
                 model, val_loader, tokenizer, t_config.device, epoch, output_dir

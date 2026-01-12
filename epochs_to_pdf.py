@@ -2,7 +2,7 @@ import os
 
 from PIL import Image
 
-RUN_NAME = "traffic_vlm_v4_run_1"
+RUN_NAME = "traffic_vlm_v6_run_1"
 BASE_DIR = os.path.join("outputs", RUN_NAME, "visualizations")
 RESULTS_DIR = os.path.join(BASE_DIR, "results")
 

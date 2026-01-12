@@ -1,22 +1,25 @@
-import os
-from dataclasses import dataclass, field
-from typing import List
+from dataclasses import dataclass
 
 @dataclass
-class DatasetConfig:
-root_dir: str = os.path.join("data", "raw")
-output_dir: str = os.path.join("data", "processed")
+class TrainingConfig:
+"""Hyperparameters for the training loop"""
 
-    images_dir_name: str = "images"
-    labels_dir_name: str = "labels"
+    # Optimization
+    batch_size: int = 4
+    grad_accumulation_steps: int = 4
+    learning_rate: float = 5e-4
+    weight_decay: float = 0.01
+    num_epochs: int = 15
 
-    image_size: int = 128
-    max_seq_len: int = 32
+    # Scheduler
+    warmup_steps: int = 500
 
-    mean: List[float] = field(default_factory=lambda: [0.485, 0.456, 0.406])
-    std: List[float] = field(default_factory=lambda: [0.229, 0.224, 0.225])
+    # System
+    device: str = "cuda"
+    mixed_precision: bool = True
+    num_workers: int = 2
 
-    allowed_weather: List[str] = field(
-        default_factory=lambda: ["clear", "partly cloudy", "overcast", "undefined"]
-    )
-    allowed_time: List[str] = field(default_factory=lambda: ["daytime"])
+    # Paths
+    checkpoint_dir: str = "checkpoints"
+    log_dir: str = "logs"
+    output_dir: str = "outputs"
