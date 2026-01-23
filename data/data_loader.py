@@ -17,7 +17,7 @@ class TrafficDataset(Dataset):
     Integrates heavy augmentation and SAFE filtering.
     """
 
-    def __init__(self, split_name):
+    def __init__(self, split_name, use_qc=True):
         self.cfg = DatasetConfig()
         self.tokenizer = SimpleTokenizer()
         self.tokenizer.load_vocab()
@@ -68,8 +68,19 @@ class TrafficDataset(Dataset):
                 ]
             )
 
-        # Load file paths
-        self.cmd_path = os.path.join(self.cfg.output_dir, f"{split_name}_commands.json")
+        # Load file paths - AUTO-USE QC FILES IF AVAILABLE
+        base_cmd_path = os.path.join(self.cfg.output_dir, f"{split_name}_commands.json")
+        qc_cmd_path = os.path.join(self.cfg.output_dir, f"{split_name}_commands_qc.json")
+
+        # Use QC-corrected version if it exists
+        if use_qc and os.path.exists(qc_cmd_path):
+            self.cmd_path = qc_cmd_path
+            print(f"✓ Using QC-corrected labels: {split_name}_commands_qc.json")
+        else:
+            self.cmd_path = base_cmd_path
+            if use_qc and not os.path.exists(qc_cmd_path):
+                print(f"⚠ QC file not found, using original: {split_name}_commands.json")
+
         self.h5_path = os.path.join(self.cfg.output_dir, f"{split_name}.h5")
 
         if not os.path.exists(self.cmd_path):
@@ -130,8 +141,8 @@ class TrafficDataset(Dataset):
         }
 
 
-def get_dataloader(split_name, batch_size=32, num_workers=4, shuffle=True):
-    dataset = TrafficDataset(split_name)
+def get_dataloader(split_name, batch_size=32, num_workers=4, shuffle=True, use_qc=True):
+    dataset = TrafficDataset(split_name, use_qc=use_qc)
 
     sampler = None
 
