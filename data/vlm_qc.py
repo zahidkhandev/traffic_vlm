@@ -12,7 +12,7 @@ class VLMJudge:
         self.processor = LlavaNextProcessor.from_pretrained(model_name)
         self.model = LlavaNextForConditionalGeneration.from_pretrained(
             model_name,
-            torch_dtype=torch.float16,
+            dtype=torch.float16,
             low_cpu_mem_usage=True,
             device_map=device,
         )

@@ -11,7 +11,7 @@ class DatasetConfig:
     images_dir_name: str = "images"
     labels_dir_name: str = "labels"
 
-    image_size: int = 224
+    image_size: int = 336
     max_seq_len: int = 32
 
     # ImageNet Mean/Std

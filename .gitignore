@@ -57,6 +57,7 @@ coverage.xml
 # Project Specific - IGNORE DATASETS AND MODELS
 # (We do not want to upload 100GB of images or 500MB model weights to GitHub)
 data/raw/
+data/old/
 data/processed*/
 *.pth
 *.pt
@@ -65,3 +66,6 @@ data/processed*/
 
 # Environment Variables
 .env
+
+llava-model
+llava-model-cache
