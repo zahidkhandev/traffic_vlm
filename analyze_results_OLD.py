@@ -956,7 +956,7 @@ if __name__ == "__main__":
             with open(vocab_path, "r") as f:
                 self.vocab = json.load(f)
             self.inverse_vocab = {v: k for k, v in self.vocab.items()}
-            print(f"✓ Loaded {len(self.vocab)} tokens from {vocab_path}")
+            print(f"Loaded {len(self.vocab)} tokens from {vocab_path}")
 
         def encode(self, text, max_len=None):
             text = text.lower()

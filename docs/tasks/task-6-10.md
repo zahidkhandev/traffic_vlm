@@ -1994,7 +1994,7 @@ def test_vision_encoder():
   assert outputs["last_hidden_state"].shape == (2, 196, 384)
   assert len(outputs["attentions"]) == 6  # num_layers
 
-  print("✓ Vision encoder forward pass successful")
+  print("Vision encoder forward pass successful")
 
 Run this before proceeding to training!
 ```
@@ -3370,7 +3370,6 @@ f
 ### **Completed Components:**
 
 1. **Task 6: Tokenizer** ✓
-
    - Word-level tokenization
    - Special tokens ([PAD], [SOS], [EOS], [YES], [NO])
    - Vocabulary building from traffic commands
@@ -3378,7 +3377,6 @@ f
    - ~300-500 token vocabulary
 
 2. **Task 7: Data Loader** ✓
-
    - PyTorch Dataset class
    - HDF5 image loading
    - Custom collate function with dynamic padding
@@ -3386,14 +3384,12 @@ f
    - Batch size 4 with gradient accumulation
 
 3. **Task 8: SigLip Vision Encoder** ✓
-
    - 6-layer transformer encoder
    - Pre-normalization architecture
    - ~22M parameters (optimized for A3000)
    - Returns [B, 196, 768] visual tokens
 
 4. **Task 9: Vision Embeddings** ✓
-
    - Patch embedding via convolution (16×16 patches)
    - Learned position embeddings
    - 196 patches from 224×224 image

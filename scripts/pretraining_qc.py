@@ -120,10 +120,10 @@ class PreTrainingQC:
             )
             with open(output_path, "w") as f:
                 json.dump(corrected_commands, f, indent=2)
-            print(f"✓ Saved corrected labels to {output_path}")
+            print(f"Saved corrected labels to {output_path}")
             return corrections
         else:
-            print("✓ No corrections needed.")
+            print("No corrections needed.")
             return {}
 
     def _save_audit_image(self, image, split, idx, old, new, reason):

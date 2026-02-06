@@ -33,7 +33,7 @@ class AutoQCPipeline:
 
         suspicious_indices = []
         if model_predictions is not None:
-            print("\n[Layer 3] Running Cleanlab Statistical QC...")
+            print("\n[Layer 3] Running Cleanlab QC...")
             suspicious_indices = self.cleanlab.find_errors(labels, model_predictions)
         else:
             print("[Layer 3] No model predictions. Sampling 5% for VLM check...")
@@ -54,8 +54,8 @@ class AutoQCPipeline:
             with open(corrected_path, "w") as f:
                 json.dump(corrected_commands, f, indent=2)
 
-            print(f"✓ Corrected {len(corrections)} labels")
-            print(f"✓ Saved to {corrected_path}")
+            print(f"Corrected {len(corrections)} labels")
+            print(f"Saved to {corrected_path}")
 
             return corrected_commands, corrections
 

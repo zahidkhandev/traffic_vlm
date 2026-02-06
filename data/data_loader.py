@@ -75,7 +75,7 @@ class TrafficDataset(Dataset):
         # Use QC-corrected version if it exists
         if use_qc and os.path.exists(qc_cmd_path):
             self.cmd_path = qc_cmd_path
-            print(f"✓ Using QC-corrected labels: {split_name}_commands_qc.json")
+            print(f"Using QC-corrected labels: {split_name}_commands_qc.json")
         else:
             self.cmd_path = base_cmd_path
             if use_qc and not os.path.exists(qc_cmd_path):

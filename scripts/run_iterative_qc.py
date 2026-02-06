@@ -35,13 +35,11 @@ def extract_predictions(model, dataloader, device):
 
 
 if __name__ == "__main__":
-    # Load trained model
     cfg = ModelConfig()
     t_cfg = TrainingConfig()
 
     model = TrafficVLM(cfg).to(t_cfg.device)
 
-    # Check if checkpoint exists
     checkpoint_path = Path("checkpoints/vlm_run_01/best_model.pt")
     if not checkpoint_path.exists():
         print(f"Error: Checkpoint not found at {checkpoint_path}")
@@ -50,19 +48,17 @@ if __name__ == "__main__":
 
     checkpoint = torch.load(checkpoint_path, map_location=t_cfg.device)
     model.load_state_dict(checkpoint["model_state_dict"])
-    print(f"✓ Loaded model from {checkpoint_path}")
+    print(f"Loaded model from {checkpoint_path}")
 
-    # Get predictions
     train_loader = get_dataloader("train", batch_size=32, shuffle=False)
     predictions = extract_predictions(model, train_loader, t_cfg.device)
-    print(f"✓ Extracted {len(predictions)} predictions")
+    print(f"Extracted {len(predictions)} predictions")
 
-    # Run QC with predictions
     print("\nStarting AutoQC with VLM validation...")
     qc = AutoQCPipeline(use_vlm=True)
     corrected_commands, corrections = qc.run_qc("train", model_predictions=predictions)
 
-    print(f"\n✓ Corrected {len(corrections)} labels")
-    print("✓ Saved corrected labels to train_commands_qc.json")
+    print(f"\nCorrected {len(corrections)} labels")
+    print("Saved corrected labels to train_commands_qc.json")
     print("\nNext: Retrain with corrected labels")
     print("  python main.py --experiment_name qc_iteration_2 --epochs 15")
