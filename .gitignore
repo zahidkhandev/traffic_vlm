@@ -69,3 +69,6 @@ data/processed*/
 
 llava-model
 llava-model-cache
+qwen-model
+qwen-vl-4b
+checkpoints

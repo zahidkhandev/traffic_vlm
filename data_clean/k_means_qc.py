@@ -2,10 +2,12 @@ import json
 import os
 from datetime import datetime
 from pprint import pprint
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
 from PIL import Image
+from renumics import spotlight
 from sentence_transformers import SentenceTransformer, util
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import normalize
@@ -19,14 +21,9 @@ class KMeansQC:
         print("Model loaded successfully!")
         self.list_embeddings = []
         self.list_of_metadata = []
+        self.list_of_image_crops = []
 
     def extract_embeddings(self, label_json_path, image_path):
-        """
-        This function opens up an image and its corrsponding labels, the label json file
-        contains bounding boxes of with corresponding labels, the goal of this function
-        is generate embeddings for those bounding box crops and store them in list_embeddings
-        along with the image and file meta data in order
-        """
         if not os.path.exists(label_json_path):
             print(f"Error: JSON file not found at {label_json_path}")
             return
@@ -63,14 +60,19 @@ class KMeansQC:
                                 "error_msg": "Zero or Negative Area",
                             }
                         )
-
                         continue
 
                     crop = full_img.crop(box=(x1, y1, x2, y2))
+                    crop_rgb = crop.convert("RGB")
 
-                    # print(f"Cropped a {category} at [{x1}, {y1}, {x2}, {y2}]")
-                    embeddings = self.model.encode([crop])  # type: ignore
+                    embeddings = cast(Any, self.model).encode(
+                        [crop_rgb],
+                        convert_to_numpy=True,
+                        show_progress_bar=False,
+                    )[0]
+
                     self.list_embeddings.append(embeddings)
+                    self.list_of_image_crops.append(crop_rgb)
                     self.list_of_metadata.append(
                         {
                             "category": category,
@@ -85,16 +87,6 @@ class KMeansQC:
     def loop_labels(
         self, images_path, labels_path, output_dir="data/processed/k_means_qc"
     ):
-        """
-        This function loops through the list of images and labels and
-        just calls the extract_embeddings fucntion to generate and store
-        list_of_embeddings and list_of_metadata
-
-        Args:
-            images_path (_type_): _description_
-            labels_path (_type_): _description_
-        """
-
         label_files = [f for f in os.listdir(labels_path) if f.endswith(".json")]
 
         print(f"Found {len(label_files)} label files. Starting processing...")
@@ -105,7 +97,6 @@ class KMeansQC:
             full_image_path = os.path.join(images_path, f"{file_id}.jpg")
 
             if os.path.exists(full_image_path):
-                print(f"Processing pair: {file_id}")
                 self.extract_embeddings(full_label_path, full_image_path)
             else:
                 print(f"Warning: Image missing for label {label_file}. Skipping...")
@@ -114,7 +105,11 @@ class KMeansQC:
 
         print("clustering started")
 
-        unique_categories = set(m["category"] for m in self.list_of_metadata)
+        unique_categories = set(
+            m["category"]
+            for m in self.list_of_metadata
+            if not m.get("is_corrupted", False)
+        )
 
         for category in unique_categories:
             print(f"Processing category: {category}")
@@ -123,11 +118,14 @@ class KMeansQC:
         print("Saving results...")
         self.save_qc_results(images_path=images_path, output_dir=output_dir)
 
+        print("Launching Spotlight visualization...")
+        self.visualize_with_spotlight()
+
     def run_clustering(self, target_category):
         category_data = [
             (emb, m)
             for emb, m in zip(self.list_embeddings, self.list_of_metadata)
-            if m["category"] == target_category
+            if m["category"] == target_category and not m.get("is_corrupted", False)
         ]
 
         if not category_data:
@@ -144,6 +142,7 @@ class KMeansQC:
             print(f"Skipping {target_category}: only {n_samples} sample(s).")
             for i in range(n_samples):
                 category_metadata[i]["statistical_score"] = 0.0
+                category_metadata[i]["cluster_id"] = 0
             return
 
         calculated_k = int((n_samples / 2) ** 0.5)
@@ -160,6 +159,7 @@ class KMeansQC:
 
             distance = np.linalg.norm(embedding - center)
             category_metadata[i]["statistical_score"] = float(distance)
+            category_metadata[i]["cluster_id"] = int(cluster_idx)
 
     def save_qc_results(
         self, images_path, output_dir="data/processed/k_means_qc", percentile=95
@@ -204,3 +204,27 @@ class KMeansQC:
         report_path = os.path.join(run_dir, f"qc_report_{timestamp}.csv")
         df.to_csv(report_path, index=False)
         print(f"QC Report and crops saved to {run_dir}")
+
+    def visualize_with_spotlight(self):
+        valid_data = [
+            (emb, m, img)
+            for emb, m, img in zip(
+                self.list_embeddings, self.list_of_metadata, self.list_of_image_crops
+            )
+            if "statistical_score" in m
+        ]
+
+        if not valid_data:
+            print("No valid embeddings to visualize")
+            return
+
+        embeddings, metadata, images = zip(*valid_data)
+        emb_array = np.vstack(embeddings)
+
+        df = pd.DataFrame(metadata)
+        df["embedding"] = list(emb_array)
+        df["image"] = list(images)
+
+        spotlight.show(
+            df, dtype={"embedding": spotlight.Embedding, "image": spotlight.Image}
+        )
