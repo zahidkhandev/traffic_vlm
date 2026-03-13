@@ -10,20 +10,12 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import torch
+import umap
 from numpy.typing import NDArray
 from PIL import Image, ImageDraw
 from qwen_vl_utils import process_vision_info
 from tqdm import tqdm
 from transformers import AutoProcessor, Qwen3VLForConditionalGeneration
-
-try:
-    import umap
-
-    HAS_UMAP = True
-except ImportError:
-    HAS_UMAP = False
-    print("Warning: UMAP not installed. Run: pip install umap-learn")
-
 
 CLASS_TOKEN_ALIASES = {
     "traffic light": "trafficlight",
@@ -194,30 +186,60 @@ class QwenVLMValidator:
         self, full_img: Image.Image, box: List[int], use_grounding: bool = True
     ) -> Tuple[Dict[str, float], NDArray]:
         x1, y1, x2, y2 = box
+        w, h = full_img.size
 
         if use_grounding:
             img_to_send = full_img.copy()
-            draw = ImageDraw.Draw(img_to_send)
-            draw.rectangle([x1, y1, x2, y2], outline="red", width=3)
+            # draw = ImageDraw.Draw(img_to_send)
+            # draw.rectangle([x1, y1, x2, y2], outline="red", width=3)
 
-            class_names_str = ", ".join(self.object_classes_prompt)
-            prompt = (
-                f"What is the object inside the red box? "
-                f"Choose from: {class_names_str}.\n\n"
-                f"Reply with only a single word from the list above."
-            )
-        else:
-            img_to_send = full_img.crop((x1, y1, x2, y2))
+            norm_x1 = int((x1 / w) * 1000)
+            norm_y1 = int((y1 / h) * 1000)
+            norm_x2 = int((x2 / w) * 1000)
+            norm_y2 = int((y2 / h) * 1000)
 
-            class_options = "\n".join(
-                [f"{i}: {alias}" for i, alias in enumerate(self.object_classes_prompt)]
-            )
-            prompt = (
-                f"Identify the main object in this image from the following list:\n"
-                f"{class_options}\n\n"
-                f"Output EXACTLY ONE digit (0-9) corresponding to the correct class. "
-                f"Do not write any other text or explanation."
-            )
+            #     class_names_str = ", ".join(self.object_classes_prompt)
+            #     prompt = (
+            #         f"What is the object inside the red box? "
+            #         f"Choose from: {class_names_str}.\n\n"
+            #         f"Reply with only a single word from the list above."
+            #     )
+            # else:
+            #     img_to_send = full_img.crop((x1, y1, x2, y2))
+
+            #     class_options = "\n".join(
+            #         [f"{i}: {alias}" for i, alias in enumerate(self.object_classes_prompt)]
+            #     )
+            #     prompt = (
+            #         f"Identify the main object in this image from the following list:\n"
+            #         f"{class_options}\n\n"
+            #         f"Output EXACTLY ONE digit (0-9) corresponding to the correct class. "
+            #         f"Do not write any other text or explanation."
+            #     )
+
+            if use_grounding:
+                img_to_send = full_img
+
+                class_names_str = ", ".join(self.object_classes_prompt)
+                prompt = (
+                    f"<|box_start|>({norm_x1},{norm_y1}),({norm_x2},{norm_y2})<|box_end|>\n"
+                    f"What object is inside this box region? Choose exactly ONE from: {class_names_str}.\n\n"
+                    f"Reply with ONLY the single word (no explanation)."
+                )
+            else:
+                img_to_send = full_img.crop((x1, y1, x2, y2))
+
+                class_options = "\n".join(
+                    [
+                        f"{i}: {alias}"
+                        for i, alias in enumerate(self.object_classes_prompt)
+                    ]
+                )
+                prompt = (
+                    f"Identify the main object from this list:\n"
+                    f"{class_options}\n\n"
+                    f"Output EXACTLY ONE digit (0-9). No other text."
+                )
 
         messages = [
             {
@@ -244,7 +266,7 @@ class BDD100KConfidentLearning:
         model_path: str,
         checkpoint_dir: str = "data/checkpoints",
         debug: bool = False,
-        debug_output_dir: str = "data/processed/confident_learning/run_with_bounding_box_red_rect",
+        debug_output_dir: str = "data/processed/confident_learning/run_without_bounding_box",
         use_grounding: bool = True,
     ):
         self.vlm = QwenVLMValidator(model_path)
@@ -727,9 +749,6 @@ class BDD100KConfidentLearning:
         print(f"Saved error grid to {out_path}")
 
     def visualize_embedding_umap(self, output_dir: str) -> None:
-        if not HAS_UMAP:
-            print("Skipping UMAP - install umap-learn")
-            return
         if len(self.embeddings) < 5:
             print("Skipping UMAP - need 5+ samples")
             return
@@ -985,8 +1004,8 @@ if __name__ == "__main__":
         use_grounding=True,
     )
 
-    images_path = r"data\raw\mini\images\test"
-    labels_path = r"data\raw\mini\labels\test"
+    images_path = r"data\raw\mini-3\images"
+    labels_path = r"data\raw\mini-3\labels"
 
     print("\nStarting dataset processing...")
     cl.process_dataset(images_path, labels_path, max_samples=None, checkpoint_every=10)
