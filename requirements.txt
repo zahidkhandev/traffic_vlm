@@ -16,3 +16,7 @@ seaborn
 gradio
 gradio_client
 transformers
+mlflow
+pyyaml
+pyarrow
+pytest
